@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef3f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f2236" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="微積ドリル">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>微分・積分ドリル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,500;0,700;1,500&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef3f7;--grid:rgba(20,40,60,.07);--ink:#14283c;--sub:#5b6b7b;--card:#fbfdff;--line:#c3d0dc;
+  --accent:#0e7c86;--ok:#1f7a45;--okbg:#dff3e6;--ng:#b3261e;--ngbg:#fbe4e1;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f2236;--grid:rgba(255,255,255,.06);--ink:#eaf1f8;--sub:#95a9bd;--card:#15304a;--line:#2d4d6b;
+  --accent:#f2d16b;--ok:#7fdca0;--okbg:#17422e;--ng:#ff9b92;--ngbg:#4a2224;}}
+:root[data-theme="dark"]{
+  --bg:#0f2236;--grid:rgba(255,255,255,.06);--ink:#eaf1f8;--sub:#95a9bd;--card:#15304a;--line:#2d4d6b;
+  --accent:#f2d16b;--ok:#7fdca0;--okbg:#17422e;--ng:#ff9b92;--ngbg:#4a2224;}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;color:var(--ink);font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;}
+main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+h1{font-size:1.15rem;margin:0;font-weight:700}
+.stats{display:flex;gap:16px;font-size:.9rem;color:var(--sub)}
+.stats b{color:var(--ink);font-size:1.1rem;font-variant-numeric:tabular-nums}
+.ctrl{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{border:0;background:transparent;color:var(--sub);font:inherit;font-size:.9rem;padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--bg);font-weight:700}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.problem{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:32px 16px;text-align:center;
+  font-family:"STIX Two Text",Georgia,"Times New Roman",serif;font-size:clamp(1.6rem,6.5vw,2.4rem);line-height:1.5;overflow-x:auto}
+.problem .op{color:var(--accent)}
+sup{font-size:.62em;line-height:0}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+@media (max-width:460px){.choices{grid-template-columns:1fr}}
+.choice{display:flex;align-items:center;gap:10px;text-align:left;border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:12px;padding:14px;cursor:pointer;font-family:"STIX Two Text",Georgia,serif;font-size:1.3rem;min-height:58px}
+.choice i{font:700 .75rem "Zen Kaku Gothic New",sans-serif;color:var(--sub);border:1.5px solid var(--line);border-radius:6px;min-width:22px;height:22px;display:grid;place-items:center;font-style:normal}
+.choice:hover:not(:disabled){border-color:var(--accent)}
+.choice:disabled{cursor:default}
+.choice.ok{background:var(--okbg);border-color:var(--ok)}
+.choice.ng{background:var(--ngbg);border-color:var(--ng)}
+.fb{min-height:88px;margin-top:14px}
+.msg{font-weight:700;font-size:1.05rem}
+.msg.ok{color:var(--ok)}.msg.ng{color:var(--ng)}
+.res{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.next{border:0;background:var(--accent);color:var(--bg);font:700 1rem "Zen Kaku Gothic New",sans-serif;padding:11px 22px;border-radius:10px;cursor:pointer}
+.exp{margin-top:14px;background:var(--card);border:1.5px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:14px 16px}
+.exp h2{font-size:.95rem;margin:0 0 4px}
+.exp .rules{margin:0 0 12px;color:var(--sub);font-size:.9rem;font-family:"STIX Two Text",Georgia,serif}
+.exp .lead{margin:0 0 12px;font-size:.9rem;line-height:1.7}
+.exp ul{margin:0;padding:0;list-style:none;display:grid;gap:14px}
+.step .eq{font-family:"STIX Two Text",Georgia,serif;font-size:1.3rem;overflow-x:auto}
+.step .arrow{color:var(--accent);margin:0 .5em}
+.step p{margin:4px 0 0;color:var(--sub);font-size:.9rem;line-height:1.7}
+.exp .note{margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--line);font-size:.9rem;line-height:1.7}
+.exp .note .ans{font-family:"STIX Two Text",Georgia,serif;font-size:1.2rem}
+.ghost,.lnk{font:inherit;cursor:pointer}
+.ghost{border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:.9rem;padding:8px 14px;border-radius:10px}
+.lnk{border:0;background:none;color:var(--accent);text-decoration:underline;padding:0;margin-left:.5em;font-size:.9rem}
+.empty{font-family:"Zen Kaku Gothic New",sans-serif;font-size:1.05rem;color:var(--sub)}
+.hint{color:var(--sub);font-size:.9rem;line-height:1.7;margin:0 0 10px}
+dialog{padding:0;border:1.5px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font-family:inherit;width:min(640px,calc(100vw - 24px));max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
+dialog[open]{display:flex;flex-direction:column}
+dialog::backdrop{background:rgba(10,24,38,.55)}
+.refHead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-bottom:1.5px solid var(--line)}
+.refHead h2{margin:0;font-size:1.05rem}
+.refBody{overflow:auto;padding:4px 16px 20px}
+.refBody h3{font-size:1rem;margin:20px 0 6px}
+.refBody h3:focus{outline:none}
+.refBody p{margin:6px 0;line-height:1.8;font-size:.95rem}
+.refBody table{width:100%;border-collapse:collapse;margin:8px 0;font-family:"STIX Two Text",Georgia,serif;font-size:1.05rem}
+.refBody th,.refBody td{border:1.5px solid var(--line);padding:8px 10px;text-align:left}
+.refBody th{font-family:"Zen Kaku Gothic New",sans-serif;font-size:.85rem;color:var(--sub);font-weight:700}
+.refBody .m{font-family:"STIX Two Text",Georgia,serif}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 .15em;font-size:.82em;line-height:1.25}
+.fr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .2em .08em}
+.fr>span:last-child{padding:.08em .2em 0}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.toc button{font-size:.85rem;padding:6px 10px}
+.exp .hint{margin:10px 0 0}
+.tip{color:var(--sub);font-size:.8rem;margin-top:18px}
+@media (prefers-reduced-motion:no-preference){.choice,.seg button{transition:background .15s,border-color .15s}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>微分・積分ドリル</h1>
+    <div class="stats"><span>正解 <b id="sc">0</b>/<b id="tt">0</b></span><span>連続 <b id="st">0</b></span><span>最高 <b id="bs">0</b></span></div>
+  </header>
+  <div class="ctrl">
+    <div class="seg" id="mode"><button data-v="d" aria-pressed="true">微分</button><button data-v="i" aria-pressed="false">積分</button><button data-v="m" aria-pressed="false">ミックス</button></div>
+    <div class="seg" id="lvl"><button data-v="1" aria-pressed="true">基本</button><button data-v="2" aria-pressed="false">2〜3項</button><button data-v="3" aria-pressed="false">中級</button><button data-v="4" aria-pressed="false">上級</button></div>
+    <div class="seg" id="src"><button data-v="n" aria-pressed="true">新しい問題</button><button data-v="r" aria-pressed="false">復習 <b id="rv">0</b></button></div>
+    <button class="ghost" id="refBtn">基礎知識・公式</button>
+  </div>
+  <div class="problem" id="prob" aria-live="polite"></div>
+  <div class="choices" id="ch"></div>
+  <div class="fb" id="fb"></div>
+  <p class="tip">キーボード：1〜4で回答、Enterで次の問題</p>
+</main>
+<dialog id="ref" aria-labelledby="refT">
+  <div class="refHead"><h2 id="refT">基礎知識と公式まとめ</h2><button class="ghost" id="refX">閉じる</button></div>
+  <div class="refBody" id="refBody">
+    <nav class="toc" aria-label="目次">
+      <button class="ghost" data-ref="r-diff">微分とは</button>
+      <button class="ghost" data-ref="r-int">積分とは</button>
+      <button class="ghost" data-ref="r-c">積分定数 C</button>
+      <button class="ghost" data-ref="r-table">公式まとめ</button>
+      <button class="ghost" data-ref="r-pow">xⁿ</button>
+      <button class="ghost" data-ref="r-const">定数</button>
+      <button class="ghost" data-ref="r-trig">sin・cos</button>
+      <button class="ghost" data-ref="r-exp">eˣ</button>
+      <button class="ghost" data-ref="r-ln">ln x・1/x</button>
+      <button class="ghost" data-ref="r-chain">合成関数（中級）</button>
+      <button class="ghost" data-ref="r-neg">マイナス指数・ルート（中級）</button>
+      <button class="ghost" data-ref="r-prod">積の微分（上級）</button>
+      <button class="ghost" data-ref="r-quot">商の微分（上級）</button>
+      <button class="ghost" data-ref="r-subst">置換積分（上級）</button>
+      <button class="ghost" data-ref="r-parts">部分積分（上級）</button>
+    </nav>
+    <h3 id="r-diff" tabindex="-1">微分とは</h3>
+    <p>グラフの<b>ある点での傾き</b>（変化の速さ）を求めることです。<span class="m">d/dx f(x)</span> は「x を少し増やしたとき、f(x) がどれだけ増えるか」の割合を表します。</p>
+    <p>例：y = x² の x = 3 での傾きは、微分した 2x に x = 3 を入れた <b>6</b> です。物の位置を微分すると、速さになります。</p>
+
+    <h3 id="r-int" tabindex="-1">積分とは</h3>
+    <p>微分の<b>逆の操作</b>です。微分すると f(x) になる元の関数を探します（不定積分）。もうひとつの顔として、グラフと x 軸の間の<b>面積</b>を求める道具でもあります。</p>
+    <p>例：x² を微分すると 2x になります。だから 2x を積分すると x²（＋ C）です。速さを積分すると、進んだ距離になります。</p>
+
+    <h3 id="r-c" tabindex="-1">積分定数 C</h3>
+    <p>x² + 1 も x² − 5 も、微分するとどちらも 2x になります（定数は消えるため）。そのため 2x の積分は「x² に何か定数を足したもの」としか言えず、<b>+ C</b> と書きます。</p>
+
+    <h3 id="r-table" tabindex="-1">公式まとめ</h3>
+    <table>
+      <thead><tr><th>f(x)</th><th>微分</th><th>積分（+ C は省略）</th></tr></thead>
+      <tbody>
+        <tr><td>xⁿ</td><td>n·xⁿ⁻¹</td><td>xⁿ⁺¹/(n+1)</td></tr>
+        <tr><td>定数 c</td><td>0</td><td>cx</td></tr>
+        <tr><td>sin x</td><td>cos x</td><td>−cos x</td></tr>
+        <tr><td>cos x</td><td>−sin x</td><td>sin x</td></tr>
+        <tr><td>eˣ</td><td>eˣ</td><td>eˣ</td></tr>
+        <tr><td>ln x</td><td>1/x</td><td>（出題なし）</td></tr>
+        <tr><td>1/x</td><td>（出題なし）</td><td>ln|x|</td></tr>
+      </tbody>
+    </table>
+    <p>共通のルール：前に付く数（係数）はそのまま残し、足し算・引き算は項ごとに計算します。</p>
+
+    <h3 id="r-table2" tabindex="-1">中級・上級の公式まとめ</h3>
+    <table>
+      <thead><tr><th>微分</th><th>積分（+ C は省略）</th></tr></thead>
+      <tbody>
+        <tr><td>(uⁿ)′ = n·uⁿ⁻¹·u′</td><td>∫(ax+b)ⁿdx = (ax+b)ⁿ⁺¹ / (a(n+1))</td></tr>
+        <tr><td>(sin u)′ = cos u·u′</td><td>∫sin(ax+b)dx = −cos(ax+b) / a</td></tr>
+        <tr><td>(cos u)′ = −sin u·u′</td><td>∫cos(ax+b)dx = sin(ax+b) / a</td></tr>
+        <tr><td>(e<sup>u</sup>)′ = e<sup>u</sup>·u′</td><td>∫e<sup>ax+b</sup>dx = e<sup>ax+b</sup> / a</td></tr>
+        <tr><td>(ln u)′ = u′ / u</td><td>∫1/(ax+b) dx = ln|ax+b| / a</td></tr>
+        <tr><td>(uv)′ = u′v + uv′</td><td>∫u v′ dx = uv − ∫u′v dx（部分積分）</td></tr>
+        <tr><td>(u/v)′ = (u′v − uv′) / v²</td><td>u = g(x)、du = g′(x)dx で置きかえ（置換積分）</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="r-pow" tabindex="-1">xⁿ（べき乗）</h3>
+    <p>xⁿ は x を n 回掛けたものです（x³ = x·x·x）。x¹ = x、x⁰ = 1 と決めます。</p>
+    <p>微分は、指数を前に出して 1 下げます（x⁴ → 4x³）。積分は、指数を 1 上げて、新しい指数で割ります（x³ → x⁴/4）。</p>
+    <p>n = −1（つまり 1/x）だけは、新しい指数が 0 になって割れないため、この公式が使えません。代わりに ln|x| を使います。</p>
+
+    <h3 id="r-const" tabindex="-1">定数</h3>
+    <p>x を含まない数（例：7）のことです。x が変わっても値が変わらないので、グラフは水平で傾きは 0。微分すると 0 になるのはこのためです。積分すると c·x（傾き c の直線）になります。</p>
+
+    <h3 id="r-trig" tabindex="-1">sin x と cos x</h3>
+    <p>円の上を回る点の高さ（sin）と横位置（cos）を、角度 x（ラジアン）の関数として見たものです。どちらも −1 から 1 の間を行き来する波の形をしています。cos x のグラフは、sin x を左にずらした形です。</p>
+    <p>微分すると、次の順にぐるぐる回ります。<br><span class="m">sin x → cos x → −sin x → −cos x → sin x → …</span><br>積分は、この逆向きに回ります。マイナスの付け忘れが多いのは、cos x の微分と sin x の積分です。</p>
+
+    <h3 id="r-exp" tabindex="-1">eˣ（指数関数）</h3>
+    <p><b>e</b> は<b>ネイピア数</b>と呼ばれる定数で、e ≈ 2.71828… です（π のように、小数が終わらない数）。eˣ は「e を x 回掛けたもの」です。</p>
+    <p>e の由来：年利 100% の預金を、1 年を n 回に分けて複利で増やすと (1 + 1/n)ⁿ 倍になります。n を大きくしていくと、この値は e に近づきます。</p>
+    <p>eˣ の大きな特徴は、<b>どの点でも、グラフの傾きがその点の高さと同じ</b>になることです。x = 0 では高さ 1 で傾き 1、x = 1 では高さ e で傾き e。だから微分しても積分しても、eˣ のまま変わりません。</p>
+    <p>増える速さが「今の量」に比例するもの（人口の増加や複利など）を表すときに、よく出てくる関数です。</p>
+
+    <h3 id="r-ln" tabindex="-1">ln x（自然対数）と 1/x</h3>
+    <p>ln x は eˣ の<b>逆の関数</b>です。「e を何乗したら x になるか」に答えます。たとえば ln e = 1、ln 1 = 0（e⁰ = 1 だから）です。x &gt; 0 のときだけ使えます。</p>
+    <p>ln x を微分すると <b>1/x</b> になります。逆に、1/x を積分すると <b>ln|x|</b> です。絶対値の記号は、x が負のときにも使えるようにするためのものです（1/x は x &lt; 0 でも存在するため）。</p>
+
+    <h3 id="r-chain" tabindex="-1">合成関数（中身がある関数）【中級】</h3>
+    <p>関数の中に、別の式が入っている形です。例：(2x + 1)³、sin(3x)、e<sup>2x</sup>、ln(x + 4)。カッコや指数の中身を <b>u</b> とおいて考えます。</p>
+    <p><b>微分</b>：外側を微分して、<b>中身の微分を掛けます</b>。</p>
+    <p class="m">(uⁿ)′ = n·uⁿ⁻¹·u′　(sin u)′ = cos u·u′　(e<sup>u</sup>)′ = e<sup>u</sup>·u′　(ln u)′ = u′/u</p>
+    <p>例：(2x + 1)³ は、外側を微分した 3(2x + 1)² に、中身の微分 2 を掛けて 6(2x + 1)² です。</p>
+    <p><b>積分</b>（中身が ax + b の1次式のとき）：外側の積分をして、<b>a で割ります</b>。微分のときに掛けた a を戻すためです。</p>
+    <p>例：∫e<sup>3x</sup>dx = ⅓e<sup>3x</sup> + C。この割り算を忘れるのが、よくあるミスです。</p>
+    <p>確かめ方：答えを微分して、「外側の微分 × 中身の微分」で元の式に戻るか見ます。</p>
+
+    <h3 id="r-neg" tabindex="-1">マイナスの指数とルート【中級】</h3>
+    <p>分母にある x は、指数にマイナスを付けて書きかえられます。1/xⁿ = x<sup>−n</sup>。また、ルートは 1/2 乗です。√x = x<sup>1/2</sup>。</p>
+    <p>こう書きかえると、xⁿ の公式がそのまま使えます。n がマイナスでも分数でも、公式は同じです。</p>
+    <p>微分の例：1/x² = x<sup>−2</sup> → −2x<sup>−3</sup> = −2/x³。√x = x<sup>1/2</sup> → ½x<sup>−1/2</sup> = 1/(2√x)。</p>
+    <p>積分の例：∫x<sup>−2</sup>dx = x<sup>−1</sup>/(−1) = −1/x。∫√x dx = x<sup>3/2</sup>/(3/2) = ⅔x<sup>3/2</sup>。分数で割るときは、逆数を掛けます。</p>
+    <p>注意：n = −1（つまり 1/x）の積分だけは、新しい指数が 0 になるため使えません。ln|x| になります。</p>
+
+    <h3 id="r-prod" tabindex="-1">積の微分【上級】</h3>
+    <p>2つの関数が掛け算になっているとき、「掛けたものの微分」は、「それぞれの微分の掛け算」にはなりません。</p>
+    <p class="m">(uv)′ = u′v + uv′</p>
+    <p>「片方だけ微分した項」を、2つ足します。例：(x·eˣ)′ = 1·eˣ + x·eˣ = (x + 1)eˣ。</p>
+    <p>よくあるミスは、両方を微分して u′v′ としてしまうことです。</p>
+
+    <h3 id="r-quot" tabindex="-1">商の微分【上級】</h3>
+    <p>割り算の形の関数の微分です。</p>
+    <p class="m">(u/v)′ = (u′v − uv′) / v²</p>
+    <p>分子の順番とマイナスに注意してください（u′v が先です）。例：(sin x / x)′ = (x cos x − sin x) / x²。</p>
+    <p>分母が x のべきだけなら、x<sup>−n</sup> を掛けた積として、積の微分で解くこともできます。</p>
+
+    <h3 id="r-subst" tabindex="-1">置換積分【上級】</h3>
+    <p>中身が複雑な積分を、中身を u とおいて簡単な積分に直す方法です。「ある関数」と「その中身の微分」が一緒に入っている形が目印です。</p>
+    <p>手順：① 中身を u とおく　② du = u′dx を作る（x dx などを du で置きかえる）　③ u で積分する　④ u をもとの式に戻す。</p>
+    <p>例：∫2x·e<sup>x²</sup>dx。u = x² とおくと du = 2x dx。∫e<sup>u</sup>du = e<sup>u</sup> = e<sup>x²</sup> + C。</p>
+    <p>例：∫x·e<sup>x²</sup>dx は、du = 2x dx から x dx = du/2。½∫e<sup>u</sup>du = ½e<sup>x²</sup> + C。</p>
+
+    <h3 id="r-parts" tabindex="-1">部分積分【上級】</h3>
+    <p>積の微分の逆から作られた、掛け算の積分の公式です。</p>
+    <p class="m">∫u v′ dx = uv − ∫u′v dx</p>
+    <p>u は微分、v′ は積分します。残った積分が元より簡単になれば成功です。u は「微分すると簡単になるほう」（x や ln x）、v′ は「積分しやすいほう」（eˣ、sin x、cos x）を選びます。</p>
+    <p>例：∫x·eˣdx。u = x、v′ = eˣ とすると、u′ = 1、v = eˣ。xeˣ − ∫eˣdx = (x − 1)eˣ + C。</p>
+    <p>ln x の積分は、v′ = 1 とみなして、u = ln x、v = x で解きます。結果は x ln x − x + C です。</p>
+  </div>
+</dialog>
+<script>
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[R(0,a.length-1)];
+const nz=(a,b)=>{let v=0;while(!v)v=R(a,b);return v};
+const T=(c,k,p=0)=>({c,k,p});
+
+function body(t){
+  switch(t.k){
+    case'pow':return t.p===0?'':t.p===1?'x':`x<sup>${t.p}</sup>`;
+    case'sin':return'sin x';case'cos':return'cos x';case'ln':return'ln x';case'lna':return'ln|x|';
+    case'exp':return'e<sup>x</sup>';case'inv':return'1/x';
+  }
+}
+function coef(t){
+  const a=Math.abs(t.c),b=body(t);
+  if(t.k==='pow'&&t.p===0)return String(a);
+  if(t.k==='inv')return a===1?'1/x':`${a}/x`;
+  if(a===1)return b;
+  return (t.k==='pow'||t.k==='exp')?`${a}${b}`:`${a} ${b}`;
+}
+function expr(ts){
+  return ts.map((t,i)=>(t.c<0?(i?' − ':'−'):(i?' + ':''))+coef(t)).join('');
+}
+const order=ts=>ts.slice().sort((a,b)=>{
+  const ap=a.k==='pow'?a.p:-1,bp=b.k==='pow'?b.p:-1;return bp-ap;});
+
+function deriv(t){
+  switch(t.k){
+    case'pow':return t.p===0?null:T(t.c*t.p,'pow',t.p-1);
+    case'sin':return T(t.c,'cos');case'cos':return T(-t.c,'sin');
+    case'exp':return T(t.c,'exp');case'ln':return T(t.c,'inv');
+  }
+}
+function integ(t){
+  switch(t.k){
+    case'pow':return T(t.c/(t.p+1),'pow',t.p+1);
+    case'sin':return T(-t.c,'cos');case'cos':return T(t.c,'sin');
+    case'exp':return T(t.c,'exp');case'inv':return T(t.c,'lna');
+  }
+}
+const RULES={
+  d:{pow:'xⁿ → n·xⁿ⁻¹',sin:'sin x → cos x',cos:'cos x → −sin x',exp:'eˣ → eˣ',ln:'ln x → 1/x',const:'定数 → 0'},
+  i:{pow:'xⁿ → xⁿ⁺¹/(n+1)',sin:'sin x → −cos x',cos:'cos x → sin x',exp:'eˣ → eˣ',inv:'1/x → ln|x|'}
+};
+
+function genDiffTerm(lv){
+  const k=pick(['pow','pow','pow','sin','cos','exp','ln']);
+  const c=lv===1?R(1,6):nz(-5,5);
+  return k==='pow'?T(c,'pow',R(1,5)):T(c,k);
+}
+function genIntTerm(lv){
+  const k=pick(['pow','pow','pow','sin','cos','exp','inv']);
+  if(k==='pow'){const p=R(0,4);return T((p+1)*(lv===1?R(1,3):nz(-3,3)),'pow',p)}
+  if(k==='inv')return T(R(1,5),'inv');
+  return T(lv===1?R(1,6):nz(-5,5),k);
+}
+function genProblem(kind,lv){
+  if(lv>=3)return genT(kind,lv);
+  const gen=kind==='d'?genDiffTerm:genIntTerm;
+  const n=lv===1?1:R(2,3);
+  const seen=new Set(),ts=[];
+  while(ts.length<n){const t=gen(lv);const key=t.k+t.p;if(seen.has(key))continue;seen.add(key);ts.push(t)}
+  if(kind==='d'&&lv===2&&Math.random()<.3)ts.push(T(nz(-9,9),'pow',0));
+  const q=order(ts);
+  const f=kind==='d'?deriv:integ;
+  const ans=order(q.map(f).filter(Boolean));
+  return{kind,q,ans};
+}
+function perturb(ts){
+  const c=ts.map(t=>({...t}));
+  const t=pick(c);
+  const ops=['c','s'];
+  if(t.k==='pow')ops.push('p','p');
+  if(t.k==='sin'||t.k==='cos')ops.push('sw','sw');
+  if(t.k==='pow'&&t.p===0)return c;
+  const op=pick(ops);
+  if(op==='c'){t.c+=pick([-2,-1,1,2]);if(t.c===0)t.c=pick([-1,1])}
+  else if(op==='s'){t.c=-t.c}
+  else if(op==='p'){const np=t.p+pick([-1,1]);t.p=np<0?t.p+1:np}
+  else if(op==='sw'){t.k=t.k==='sin'?'cos':'sin'}
+  return order(c);
+}
+
+const num=n=>String(n).replace('-','−');
+const par=n=>n<0?`(${num(n)})`:num(n);
+
+function why(kind,t){
+  const c=t.c,p=t.p;
+  if(kind==='d'){
+    switch(t.k){
+      case'pow':
+        if(p===0)return '定数は x が変わっても値が変わりません（グラフが水平）。傾きは 0 なので、この項は消えます。';
+        if(p===1)return `x は x<sup>1</sup> と見ます。指数 1 を前に出して ${par(c)} × 1 = ${num(c)}。x<sup>0</sup> = 1 なので x は消えて、数だけが残ります。`;
+        return `指数 ${p} を係数に掛けて、指数を 1 つ下げます。係数は ${par(c)} × ${p} = ${num(c*p)}、指数は ${p} → ${p-1}。`;
+      case'sin':return `sin x を微分すると cos x。係数 ${par(c)} はそのまま残ります。`;
+      case'cos':return `cos x を微分すると <b>−</b>sin x（マイナスが付くので要注意）。係数 ${par(c)} に −1 を掛けて ${num(-c)}。`;
+      case'exp':return `e<sup>x</sup> は微分しても e<sup>x</sup> のまま。係数 ${par(c)} もそのまま残ります。`;
+      case'ln':return `ln x を微分すると 1/x。係数 ${par(c)} はそのまま残ります。`;
+    }
+  }
+  switch(t.k){
+    case'pow':
+      if(p===0)return `定数 ${par(c)} は ${par(c)}·x<sup>0</sup> と見られます。指数を 1 上げて x<sup>1</sup> にし、新しい指数 1 で割ると ${par(c)}x。`;
+      return `指数を 1 上げて x<sup>${p+1}</sup> にし、新しい指数 ${p+1} で割ります。係数は ${par(c)} ÷ ${p+1} = ${num(c/(p+1))}。`;
+    case'sin':return `sin x の積分は <b>−</b>cos x（微分して sin x になる関数を探すと −cos x）。係数 ${par(c)} に −1 を掛けて ${num(-c)}。`;
+    case'cos':return `cos x の積分は sin x。係数 ${par(c)} はそのまま残ります。`;
+    case'exp':return `e<sup>x</sup> は積分しても e<sup>x</sup> のまま。係数 ${par(c)} もそのまま残ります。`;
+    case'inv':return `1/x の積分は ln|x|。x が負のときも使えるように絶対値が付きます。係数 ${par(c)} はそのまま残ります。`;
+  }
+}
+const REF={pow:['r-pow','xⁿ のルール'],sin:['r-trig','sin・cos とは？'],cos:['r-trig','sin・cos とは？'],exp:['r-exp','eˣ とは？'],ln:['r-ln','ln x とは？'],inv:['r-ln','ln x と 1/x とは？']};
+const linkFor=t=>{
+  const r=(t.k==='pow'&&t.p===0)?['r-const','定数とは？']:REF[t.k];
+  return r?`<button class="lnk" data-ref="${r[0]}">${r[1]}</button>`:'';
+};
+function explain(p,correct){
+  if(p.tid)return explainT(p,correct);
+  const d=p.kind==='d';
+  const f=d?deriv:integ;
+  const kinds=[...new Set(p.q.map(t=>t.k==='pow'&&t.p===0&&d?'const':t.k))];
+  const rules=kinds.map(k=>RULES[p.kind][k]).filter(Boolean).join('　／　');
+  const lead=p.q.length>1
+    ?`<p class="lead">式が複数の項の和になっています。<b>項ごとに分けて</b>計算し、最後にそのまま足し合わせます。</p>`:'';
+  const rows=p.q.map(t=>{
+    const r=f(t);
+    return `<li class="step"><div class="eq">${expr([t])}<span class="arrow">→</span>${r?expr([r]):'0'}</div><p>${why(p.kind,t)}${linkFor(t)}</p></li>`;
+  }).join('');
+  let note='';
+  if(!d){
+    note=`<p class="note"><span class="ans">答え：${correct}</span><br>C は積分定数です。定数は微分すると 0 になって消えるので、元の式にどんな定数が付いていたかは分かりません。そのため「何かの定数」を表す C を付けます。<button class="lnk" data-ref="r-c">積分定数 C とは？</button><br>検算：答えを微分して、元の式に戻れば正解です。</p>`;
+  }else if(p.q.length>1){
+    note=`<p class="note"><span class="ans">答え：${correct}</span></p>`;
+  }
+  return `<div class="exp"><h2>解説</h2><p class="rules">使う公式：${rules}</p>${lead}<ul>${rows}</ul>${note}</div>`;
+}
+
+/* ===== 中級・上級：テンプレート式の問題 ===== */
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const rat=(n,d)=>{const g=gcd(n,d)||1;let a=n/g,b=d/g;if(b<0){a=-a;b=-b}return[a,b]};
+const fr=(n,d)=>`<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const sf=(n,d)=>(n<0?'−':'')+fr(Math.abs(n),d);
+const fq=(n,d,body)=>{const[a,b]=rat(n,d);return(a<0?'−':'')+fr(Math.abs(a),(b===1?'':b)+body)};
+const cf=(n,d=1)=>{const[a,b]=rat(n,d);return b===1?(a===1?'':a===-1?'−':num(a)):(a<0?'−':'')+fr(Math.abs(a),b)};
+const tm=(n,d,body)=>{const c=cf(n,d);return c+(c&&c!=='−'&&/^(sin|cos|ln)/.test(body)?' ':'')+body};
+const sp=(base,n)=>n===1?base:`${base}<sup>${n}</sup>`;
+const xp=n=>sp('x',n);
+const mx=m=>`x<sup>${num(m)}</sup>`;
+const pr=s=>`(${s})`;
+const ex=s=>`e<sup>${s}</sup>`;
+const lin=(a,b)=>(a===1?'x':a===-1?'−x':`${num(a)}x`)+(b===0?'':` ${b>0?'+':'−'} ${Math.abs(b)}`);
+const jn=ps=>ps.map(([c,b,d=1],i)=>{
+  const neg=c<0,m=Math.abs(c);
+  const t=b===''?(d===1?String(m):fr(m,d)):tm(m,d,b);
+  return i?(neg?' − ':' + ')+t:(neg?'−':'')+t;
+}).join('');
+
+const TPL=[];
+const mk=(id,lv,kind,gen,view)=>TPL.push({id,lv,kind,gen,view});
+const tby=id=>TPL.find(t=>t.id===id);
+function genT(kind,lv){
+  const t=pick(TPL.filter(x=>x.lv===lv&&x.kind===kind));
+  return{kind,lv,tid:t.id,par:t.gen()};
+}
+function viewT(p){
+  const v=tby(p.tid).view(p.par);
+  const seen=new Set([v.ans]);
+  const w=v.wrongs.filter(x=>!seen.has(x)&&seen.add(x));
+  for(let i=w.length-1;i>0;i--){const j=R(0,i);[w[i],w[j]]=[w[j],w[i]]}
+  return{...v,wrongs:w.slice(0,3)};
+}
+function explainT(p,correct){
+  const v=viewT(p);
+  const rows=v.steps.map(([e,t])=>`<li class="step"><div class="eq">${e}</div><p>${t}</p></li>`).join('');
+  const links=v.refs.map(([id,l])=>`<button class="lnk" data-ref="${id}">${l}</button>`).join('');
+  const c=p.kind==='i'?`<br>C は積分定数です。<button class="lnk" data-ref="r-c">積分定数 C とは？</button><br>検算：答えを微分して、元の式に戻れば正解です。`:'';
+  return `<div class="exp"><h2>解説</h2><p class="rules">使う公式：${v.rules}</p><ul>${rows}</ul><p class="note"><span class="ans">答え：${correct}</span>${c}</p><p class="hint">くわしく：${links}</p></div>`;
+}
+/* --- 中級・微分 --- */
+mk('d-chainpow',3,'d',()=>({a:pick([2,3,4,5,-1,-2]),b:nz(-5,5),n:R(2,5)}),({a,b,n})=>{
+  const w=lin(a,b),u=pr(w),ans=tm(n*a,1,sp(u,n-1));
+  return{q:sp(u,n),ans,
+    wrongs:[tm(n,1,sp(u,n-1)),tm(n*a,1,sp(u,n)),tm(-n*a,1,sp(u,n-1)),tm((n+1)*a,1,sp(u,n)),tm(a,1,sp(u,n-1))],
+    steps:[
+      [`u = ${w}`,`カッコの中身を u とおきます。式は u<sup>${n}</sup> の形です。`],
+      [`(u<sup>${n}</sup>)′ = ${n}${sp('u',n-1)}`,`外側を、べき乗の公式で微分します（指数 ${n} を前に出して 1 下げる）。`],
+      [`u′ = ${num(a)}`,`中身 ${w} を微分すると ${num(a)}。定数の部分は消えて、x の係数だけが残ります。`],
+      [`${n}${sp('u',n-1)} × ${par(a)} → ${ans}`,'外側の微分に中身の微分を掛け、u をもとの式に戻して整理します。']],
+    rules:'(u<sup>n</sup>)′ = n·u<sup>n−1</sup>·u′',
+    refs:[['r-chain','合成関数の微分とは？']]};
+});
+mk('d-chaintrig',3,'d',()=>({f:R(0,1),a:pick([2,3,4,5,-2,-3]),b:pick([0,0,1,-1,2,-2])}),({f,a,b})=>{
+  const w=lin(a,b),s=`sin(${w})`,c=`cos(${w})`,ans=f?tm(-a,1,s):tm(a,1,c);
+  return{q:f?c:s,ans,
+    wrongs:f?[s,tm(a,1,s),tm(-1,a,s),tm(-a,1,c),tm(-2*a,1,s)]:[c,tm(-a,1,c),tm(1,a,c),tm(a,1,s),tm(2*a,1,c)],
+    steps:[
+      [`u = ${w}`,'カッコの中身を u とおきます。'],
+      [f?'(cos u)′ = −sin u':'(sin u)′ = cos u',`外側を微分します。${f?'cos の微分にはマイナスが付きます。':''}`],
+      [`u′ = ${num(a)}`,`中身 ${w} を微分すると ${num(a)}。`],
+      [`${f?'−sin u':'cos u'} × ${par(a)} → ${ans}`,'外側の微分に u′ を掛け、u をもとの式に戻します。']],
+    rules:f?'(cos u)′ = −sin u·u′':'(sin u)′ = cos u·u′',
+    refs:[['r-chain','合成関数の微分とは？'],['r-trig','sin・cos とは？']]};
+});
+mk('d-chainexp',3,'d',()=>({a:pick([2,3,4,5,-1,-2,-3]),b:pick([0,0,0,1,-1,2])}),({a,b})=>{
+  const w=lin(a,b),e=ex(w),ans=tm(a,1,e);
+  return{q:e,ans,
+    wrongs:[e,tm(1,a,e),tm(-a,1,e),tm(a,1,ex(lin(a-1,b))),tm(2*a,1,e)],
+    steps:[
+      [`u = ${w}`,'指数の中身を u とおきます。'],
+      ['(e<sup>u</sup>)′ = e<sup>u</sup>','e<sup>u</sup> は微分しても e<sup>u</sup> のままです。'],
+      [`u′ = ${num(a)}`,`中身 ${w} を微分すると ${num(a)}。`],
+      [`e<sup>u</sup> × ${par(a)} → ${ans}`,'中身の微分を掛けて、u をもとの式に戻します。']],
+    rules:'(e<sup>u</sup>)′ = e<sup>u</sup>·u′',
+    refs:[['r-chain','合成関数の微分とは？'],['r-exp','eˣ とは？']]};
+});
+mk('d-chainln',3,'d',()=>({a:pick([2,3,4,5,-1,-2]),b:nz(-5,5)}),({a,b})=>{
+  const w=lin(a,b),ans=sf(a,w);
+  return{q:`ln(${w})`,ans,
+    wrongs:[fr(1,w),sf(-a,w),sf(a,sp(pr(w),2)),tm(a,1,`ln(${w})`),sf(2*a,w)],
+    steps:[
+      [`u = ${w}`,'ln の中身を u とおきます。'],
+      ['(ln u)′ = 1/u','ln u を微分すると 1/u です。'],
+      [`u′ = ${num(a)}`,`中身 ${w} を微分すると ${num(a)}。`],
+      [`${fr(1,'u')} × ${par(a)} → ${ans}`,'分子に u′ が来ます。u をもとの式に戻します。']],
+    rules:'(ln u)′ = u′/u',
+    refs:[['r-chain','合成関数の微分とは？'],['r-ln','ln x とは？']]};
+});
+mk('d-negpow',3,'d',()=>({c:R(1,6),n:R(1,4)}),({c,n})=>{
+  const ans=sf(-c*n,xp(n+1));
+  return{q:fr(c,xp(n)),ans,
+    wrongs:[sf(c*n,xp(n+1)),sf(-c*n,xp(n)),sf(-c,xp(n+1)),sf(-c*(n+1),xp(n+2)),sf(-c*n,xp(n+2))],
+    steps:[
+      [`${fr(c,xp(n))} = ${tm(c,1,mx(-n))}`,`分母の x<sup>${n}</sup> を、指数がマイナスの形に直します（分母にある → 指数にマイナス）。`],
+      [`${tm(c,1,mx(-n))} → ${tm(-c*n,1,mx(-n-1))}`,`いつもの公式です。指数 ${num(-n)} を前に出して掛け、指数を 1 下げて ${num(-n-1)} にします。`],
+      [`${mx(-n-1)} = ${fr(1,xp(n+1))}`,'マイナスの指数は、分母に戻します。'],
+      [`→ ${ans}`,'係数をまとめて、答えです。']],
+    rules:'(x<sup>n</sup>)′ = n·x<sup>n−1</sup>（n が負でも同じ）',
+    refs:[['r-neg','マイナスの指数・ルートとは？']]};
+});
+mk('d-sqrt',3,'d',()=>({c:R(1,6)}),({c})=>{
+  const ans=fq(c,2,'√x');
+  return{q:tm(c,1,'√x'),ans,
+    wrongs:[fr(c,'√x'),fq(2*c,1,'√x'),tm(c,2,'x<sup>3/2</sup>'),fq(c,2,'x'),fq(c,3,'√x')],
+    steps:[
+      ['√x = x<sup>1/2</sup>','ルートは 1/2 乗として書きかえます。'],
+      [`${tm(c,1,'x<sup>1/2</sup>')} → ${tm(c,2,'x<sup>−1/2</sup>')}`,'指数 1/2 を前に出して掛け、指数を 1 下げて −1/2 にします。'],
+      [`x<sup>−1/2</sup> = ${fr(1,'√x')}`,'マイナスの指数は、分母に戻します。'],
+      [`→ ${ans}`,'係数をまとめて、答えです。']],
+    rules:'(x<sup>n</sup>)′ = n·x<sup>n−1</sup>（n が分数でも同じ）',
+    refs:[['r-neg','マイナスの指数・ルートとは？']]};
+});
+/* --- 中級・積分 --- */
+mk('i-chainpow',3,'i',()=>({a:pick([2,3,4,5,-1,-2]),b:nz(-5,5),n:R(2,4)}),({a,b,n})=>{
+  const w=lin(a,b),u=pr(w),ans=tm(1,a*(n+1),sp(u,n+1));
+  return{q:sp(u,n),ans,
+    wrongs:[tm(1,n+1,sp(u,n+1)),tm(1,a,sp(u,n+1)),tm(-1,a*(n+1),sp(u,n+1)),tm(1,a*(n+1),sp(u,n)),tm(1,2*a*(n+1),sp(u,n+1))],
+    steps:[
+      [`u = ${w}`,'カッコの中身を u とおきます。'],
+      [`∫u<sup>${n}</sup> du = ${fr(1,n+1)}u<sup>${n+1}</sup>`,`外側を、べき乗の積分の公式で積分します（指数を 1 上げて、新しい指数 ${n+1} で割る）。`],
+      [`÷ ${num(a)}`,`中身 ${w} の x の係数は ${num(a)} なので、さらに ${num(a)} で割ります（微分のときに掛けた分を戻すため）。`],
+      [`→ ${ans}`,'u をもとの式に戻して整理します。']],
+    rules:`∫(ax+b)<sup>n</sup>dx = ${fr('(ax+b)<sup>n+1</sup>','a(n+1)')}`,
+    refs:[['r-chain','合成関数とは？']]};
+});
+mk('i-chaintrig',3,'i',()=>({f:R(0,1),a:pick([2,3,4,5,-2,-3]),b:pick([0,0,1,-1,2])}),({f,a,b})=>{
+  const w=lin(a,b),s=`sin(${w})`,c=`cos(${w})`,ans=f?tm(1,a,s):tm(-1,a,c);
+  return{q:f?c:s,ans,
+    wrongs:f?[s,tm(a,1,s),tm(-1,a,s),tm(1,a,c),tm(1,2*a,s)]:[tm(-1,1,c),tm(-a,1,c),tm(1,a,c),tm(-1,a,s),tm(-1,2*a,c)],
+    steps:[
+      [`u = ${w}`,'カッコの中身を u とおきます。'],
+      [f?'∫cos u du = sin u':'∫sin u du = −cos u',`外側を積分します。${f?'':'sin の積分にはマイナスが付きます。'}`],
+      [`÷ ${num(a)}`,`中身 ${w} の x の係数 ${num(a)} で割ります。`],
+      [`→ ${ans}`,'u をもとの式に戻して整理します。']],
+    rules:f?`∫cos(ax+b)dx = ${fr(1,'a')}sin(ax+b)`:`∫sin(ax+b)dx = −${fr(1,'a')}cos(ax+b)`,
+    refs:[['r-chain','合成関数とは？'],['r-trig','sin・cos とは？']]};
+});
+mk('i-chainexp',3,'i',()=>({a:pick([2,3,4,5,-1,-2,-3]),b:pick([0,0,1,-1,2])}),({a,b})=>{
+  const w=lin(a,b),e=ex(w),ans=tm(1,a,e);
+  return{q:e,ans,
+    wrongs:[e,tm(a,1,e),tm(-1,a,e),tm(1,2*a,e),tm(2,a,e)],
+    steps:[
+      [`u = ${w}`,'指数の中身を u とおきます。'],
+      ['∫e<sup>u</sup> du = e<sup>u</sup>','e<sup>u</sup> は積分しても e<sup>u</sup> のままです。'],
+      [`÷ ${num(a)}`,`中身 ${w} の x の係数 ${num(a)} で割ります。`],
+      [`→ ${ans}`,'u をもとの式に戻します。']],
+    rules:`∫e<sup>ax+b</sup>dx = ${fr(1,'a')}e<sup>ax+b</sup>`,
+    refs:[['r-chain','合成関数とは？'],['r-exp','eˣ とは？']]};
+});
+mk('i-inv',3,'i',()=>({c:R(1,4),a:pick([2,3,4,5,-1,-2]),b:nz(-5,5)}),({c,a,b})=>{
+  const w=lin(a,b),L=`ln|${w}|`,ans=tm(c,a,L);
+  return{q:fr(c,w),ans,
+    wrongs:[tm(c,1,L),tm(c*a,1,L),tm(-c,a,L),tm(c,2*a,L),tm(2*c,1,L),tm(c,3*a,L)],
+    steps:[
+      [`${fr(c,w)} = ${tm(c,1,fr(1,w))}`,`係数 ${c} は外に出します。`],
+      [`∫${fr(1,'u')} du = ln|u|`,'1/u の積分は ln|u| です。'],
+      [`÷ ${num(a)}`,`中身 ${w} の x の係数 ${num(a)} で割ります。`],
+      [`→ ${ans}`,'係数と合わせて整理します。']],
+    rules:`∫${fr(1,'ax+b')}dx = ${fr(1,'a')}ln|ax+b|`,
+    refs:[['r-ln','ln x と 1/x とは？'],['r-chain','合成関数とは？']]};
+});
+mk('i-negpow',3,'i',()=>({c:R(1,5),n:R(2,4)}),({c,n})=>{
+  const ans=fq(-c,n-1,xp(n-1));
+  return{q:fr(c,xp(n)),ans,
+    wrongs:[fq(c,n-1,xp(n-1)),fq(-c,1,xp(n-1)),fq(-c,n+1,xp(n+1)),tm(c,1,'ln|x|'),fq(-c,n,xp(n-1))],
+    steps:[
+      [`${fr(c,xp(n))} = ${tm(c,1,mx(-n))}`,'分母の x の累乗を、マイナスの指数に直します。'],
+      [`${tm(c,1,mx(-n))} → ${tm(c,-n+1,mx(-n+1))}`,`指数を 1 上げて ${num(-n+1)} にし、新しい指数 ${num(-n+1)} で割ります。`],
+      [`${mx(-n+1)} = ${fr(1,xp(n-1))}`,'マイナスの指数は、分母に戻します。'],
+      [`→ ${ans}`,'符号と係数をまとめて、答えです。']],
+    rules:'∫x<sup>n</sup>dx = x<sup>n+1</sup>/(n+1)（n ≠ −1）',
+    refs:[['r-neg','マイナスの指数・ルートとは？']]};
+});
+mk('i-sqrt',3,'i',()=>({c:R(1,6)}),({c})=>{
+  const ans=tm(2*c,3,'x<sup>3/2</sup>');
+  return{q:tm(c,1,'√x'),ans,
+    wrongs:[tm(3*c,2,'x<sup>3/2</sup>'),tm(2*c,3,'x<sup>1/2</sup>'),tm(c,1,'x<sup>3/2</sup>'),tm(2*c,3,'x<sup>2</sup>'),tm(c,3,'x<sup>3/2</sup>')],
+    steps:[
+      ['√x = x<sup>1/2</sup>','ルートは 1/2 乗として書きかえます。'],
+      [`${tm(c,1,'x<sup>1/2</sup>')} → ${tm(c,1,'x<sup>3/2</sup>')} ÷ ${fr(3,2)}`,'指数を 1 上げて 3/2 にし、新しい指数 3/2 で割ります。'],
+      [`÷ ${fr(3,2)} は × ${fr(2,3)}`,'分数で割るときは、逆数を掛けます。'],
+      [`→ ${ans}`,'係数をまとめて、答えです。']],
+    rules:'∫x<sup>n</sup>dx = x<sup>n+1</sup>/(n+1)（n が分数でも同じ）',
+    refs:[['r-neg','マイナスの指数・ルートとは？']]};
+});
+/* --- 上級・微分 --- */
+const FN=['e','sin','cos','ln'];
+const fbody=(t,m)=>t===0?(m===0?ex('x'):xp(m)+ex('x')):(m===0?`${FN[t]} x`:`${xp(m)} ${FN[t]} x`);
+const fv=t=>t===0?ex('x'):`${FN[t]} x`;
+const fpr=t=>['e<sup>x</sup>','cos x','−sin x',fr(1,'x')][t];
+const fref=t=>[['r-exp','eˣ とは？'],['r-trig','sin・cos とは？'],['r-trig','sin・cos とは？'],['r-ln','ln x とは？']][t];
+mk('d-prod',4,'d',()=>({t:R(0,3),n:R(1,3),c:R(1,3)}),({t,n,c})=>{
+  const a=[c*n,fbody(t,n-1)];
+  const b=[[c,fbody(t,n)],[c,xp(n)+' cos x'],[-c,xp(n)+' sin x'],[c,n===1?'':xp(n-1)]][t];
+  const ans=jn([a,b]),du=n===1?'1':tm(n,1,xp(n-1));
+  return{q:tm(c,1,fbody(t,n)),ans,
+    wrongs:[jn([a]),jn([b]),jn([a,[-b[0],b[1]]]),jn([[c,fbody(t,n-1)],b]),jn([a,[2*b[0],b[1]]])],
+    steps:[
+      [`u = ${xp(n)},　v = ${fv(t)}`,'2つの関数の掛け算なので、積の微分を使います。'],
+      [`u′ = ${du},　v′ = ${fpr(t)}`,'それぞれを別々に微分します。'],
+      ['u′v + uv′','公式に当てはめます（u′v は「u だけ微分」、uv′ は「v だけ微分」した項）。'],
+      [`→ ${ans}`,c>1?`係数 ${c} は全体に掛けて、整理します。`:'整理して、答えです。']],
+    rules:'(uv)′ = u′v + uv′',
+    refs:[['r-prod','積の微分とは？'],fref(t)]};
+});
+mk('d-quot',4,'d',()=>({t:R(0,3),n:R(1,2),c:R(1,2)}),({t,n,c})=>{
+  const nu=[[[c,'x'+ex('x')],[-c*n,ex('x')]],[[c,'x cos x'],[-c*n,'sin x']],[[-c,'x sin x'],[-c*n,'cos x']],[[c,''],[-c*n,'ln x']]][t];
+  const D=xp(n+1),ans=fr(jn(nu),D);
+  return{q:fr(tm(c,1,fv(t)),xp(n)),ans,
+    wrongs:[fr(jn([nu[0],[-nu[1][0],nu[1][1]]]),D),fr(jn([nu[0]]),D),fr(jn(nu),xp(n)),fr(jn(nu.map(([a,b])=>[-a,b])),D),fr(jn(nu),xp(n+2))],
+    steps:[
+      [`u = ${tm(c,1,fv(t))},　v = ${xp(n)}`,'割り算の形なので、商の微分を使います。'],
+      [`u′ = ${tm(c,1,fpr(t))},　v′ = ${n===1?'1':tm(n,1,xp(n-1))}`,'それぞれを別々に微分します。'],
+      [`${fr('u′v − uv′','v<sup>2</sup>')}`,`分母は v<sup>2</sup> = ${xp(2*n)} になります。分子は「u′v − uv′」です（順番とマイナスに注意）。`],
+      [n===1?'そのまま整理':`分子・分母を x で割って約分`,n===1?'分子を整理します。':'分子の各項に x が含まれるので、分母 x<sup>4</sup> と合わせて x で約分し、分母を x<sup>3</sup> にします。'],
+      [`→ ${ans}`,'整理して、答えです。']],
+    rules:`(u/v)′ = ${fr('u′v − uv′','v<sup>2</sup>')}`,
+    refs:[['r-quot','商の微分とは？'],fref(t)]};
+});
+mk('d-chain2',4,'d',()=>({t:R(0,4),m:R(2,3),b:nz(-4,4),n:R(2,4)}),({t,m,b,n})=>{
+  const B=Math.abs(b),X=xp(m),dX=tm(m,1,xp(m-1));
+  const in2=`${xp(2)} ${(t===3||b>0)?'+':'−'} ${B}`,P2=pr(in2);
+  let q,ans,wr,u,outer,du;
+  if(t===0){
+    q=`sin(${X})`;ans=tm(m,1,`${xp(m-1)} cos(${X})`);
+    wr=[`cos(${X})`,tm(m,1,`cos(${X})`),tm(-m,1,`${xp(m-1)} cos(${X})`),tm(m,1,`${xp(m-1)} sin(${X})`),tm(1,m,`${xp(m-1)} cos(${X})`)];
+    u=X;outer='(sin u)′ = cos u';du=dX;
+  }else if(t===1){
+    q=`cos(${X})`;ans=tm(-m,1,`${xp(m-1)} sin(${X})`);
+    wr=[`sin(${X})`,tm(m,1,`${xp(m-1)} sin(${X})`),tm(-m,1,`sin(${X})`),tm(-m,1,`${xp(m-1)} cos(${X})`),tm(-1,m,`${xp(m-1)} sin(${X})`)];
+    u=X;outer='(cos u)′ = −sin u';du=dX;
+  }else if(t===2){
+    q=ex(X);ans=tm(m,1,xp(m-1)+ex(X));
+    wr=[ex(X),tm(m,1,ex(X)),tm(1,m,xp(m-1)+ex(X)),tm(m,1,xp(m)+ex(X)),tm(m,1,xp(m-1)+ex(xp(m-1)))];
+    u=X;outer='(e<sup>u</sup>)′ = e<sup>u</sup>';du=dX;
+  }else if(t===3){
+    q=`ln(${in2})`;ans=fr('2x',in2);
+    wr=[fr(1,in2),fr('x',in2),fr('2x',sp(P2,2)),fr(2,in2),fr('2x',xp(2))];
+    u=in2;outer='(ln u)′ = 1/u';du='2x';
+  }else{
+    q=sp(P2,n);ans=tm(2*n,1,'x'+sp(P2,n-1));
+    wr=[tm(n,1,sp(P2,n-1)),tm(2*n,1,sp(P2,n-1)),tm(2*n,1,'x'+sp(P2,n)),tm(n,1,'x'+sp(P2,n-1)),tm(2,1,'x'+sp(P2,n-1))];
+    u=in2;outer=`(u<sup>${n}</sup>)′ = ${n}${sp('u',n-1)}`;du='2x';
+  }
+  return{q,ans,wrongs:wr,
+    steps:[
+      [`u = ${u}`,'中身（カッコの中・指数の中）を u とおきます。'],
+      [outer,'外側を微分します。'],
+      [`u′ = ${du}`,'中身を微分します。これを掛け忘れやすいので注意です。'],
+      [`（外側の微分）× u′ → ${ans}`,'u をもとの式に戻して整理します。']],
+    rules:'{f(u)}′ = f′(u)·u′',
+    refs:[['r-chain','合成関数の微分とは？']]};
+});
+/* --- 上級・積分 --- */
+mk('i-subst',4,'i',()=>({t:R(0,4),c:R(1,3),b:nz(-3,3),n:R(2,3)}),({t,c,b,n})=>{
+  const B=Math.abs(b),X2=xp(2),in2=`${X2} ${(t===2||b>0)?'+':'−'} ${B}`,P2=pr(in2);
+  const e2=ex(X2),eS=ex('sin x');
+  let q,ans,wr,U,dU,mid,hint='x dx = du/2 と書きかえられます。',rf=[];
+  if(t===0){
+    q=tm(c,1,'x'+e2);ans=tm(c,2,e2);
+    wr=[tm(c,1,e2),tm(2*c,1,e2),tm(c,2,'x'+e2),tm(c,2,ex(xp(3))),tm(c,3,e2)];
+    U=X2;dU='2x dx';mid=`${cf(c,2)}∫e<sup>u</sup>du = ${cf(c,2)}e<sup>u</sup>`;rf=[['r-exp','eˣ とは？']];
+  }else if(t===1){
+    q=tm(c,1,'x'+sp(P2,n));ans=tm(c,2*(n+1),sp(P2,n+1));
+    wr=[tm(c,n+1,sp(P2,n+1)),tm(c,2,sp(P2,n+1)),tm(c,2*(n+1),'x'+sp(P2,n+1)),tm(c,2*n,sp(P2,n)),tm(2*c,n+1,sp(P2,n+1))];
+    U=in2;dU='2x dx';mid=`${cf(c,2)}∫u<sup>${n}</sup>du = ${cf(c,2*(n+1))}u<sup>${n+1}</sup>`;
+  }else if(t===2){
+    q=fr(tm(c,1,'x'),in2);ans=tm(c,2,`ln(${in2})`);
+    wr=[tm(c,1,`ln(${in2})`),tm(2*c,1,`ln(${in2})`),tm(c,2,'ln x'),tm(-c,2,`ln(${in2})`),tm(c,2,'ln|x|')];
+    U=in2;dU='2x dx';mid=`${cf(c,2)}∫${fr(1,'u')}du = ${cf(c,2)}ln u`;rf=[['r-ln','ln x と 1/x とは？']];
+  }else if(t===3){
+    q=tm(c,1,'cos x '+eS);ans=tm(c,1,eS);
+    wr=[tm(c,1,'cos x '+eS),tm(-c,1,eS),tm(c,1,ex('cos x')),tm(c,1,'sin x '+eS),tm(c,2,eS)];
+    U='sin x';dU='cos x dx';hint='cos x dx がそのまま du になります。';
+    mid=`${cf(c,1)}∫e<sup>u</sup>du = ${cf(c,1)}e<sup>u</sup>`;rf=[['r-exp','eˣ とは？'],['r-trig','sin・cos とは？']];
+  }else{
+    q=tm(c,1,`x sin(${X2})`);ans=tm(-c,2,`cos(${X2})`);
+    wr=[tm(c,2,`cos(${X2})`),tm(-c,1,`cos(${X2})`),tm(c,2,`sin(${X2})`),tm(-c,2,`x cos(${X2})`),tm(-2*c,1,`cos(${X2})`)];
+    U=X2;dU='2x dx';mid=`${cf(c,2)}∫sin u du = ${cf(-c,2)}cos u`;rf=[['r-trig','sin・cos とは？']];
+  }
+  return{q,ans,wrongs:wr,
+    steps:[
+      [`u = ${U}`,'「中身」にあたる部分（カッコの中・指数の中など）を u とおきます。'],
+      [`du = ${dU}`,`u を微分して du を作ります。${hint}`],
+      [mid,'x を u に置きかえて、u で積分します。'],
+      [`→ ${ans}`,'u をもとの式に戻します。']],
+    rules:'置換積分：u = g(x) とおき、g′(x)dx を du に置きかえる',
+    refs:[['r-subst','置換積分とは？'],...rf]};
+});
+mk('i-parts',4,'i',()=>({t:R(0,4),c:R(1,3)}),({t,c})=>{
+  const E=ex('x'),X2=xp(2);
+  const D=[
+    {body:'x'+E,u:'x',vp:E,du:'1',v:E,mid:`x${E} − ∫${E}dx`,ans:tm(c,1,`(x − 1)${E}`),
+      wr:[tm(c,1,`(x + 1)${E}`),tm(c,1,'x'+E),tm(c,2,X2+E),tm(c,1,`(1 − x)${E}`),tm(c,1,`(x − 2)${E}`)],rf:[['r-exp','eˣ とは？']]},
+    {body:'x sin x',u:'x',vp:'sin x',du:'1',v:'−cos x',mid:'−x cos x + ∫cos x dx',ans:jn([[-c,'x cos x'],[c,'sin x']]),
+      wr:[jn([[c,'x cos x'],[c,'sin x']]),jn([[-c,'x cos x'],[-c,'sin x']]),jn([[-c,'x cos x']]),jn([[c,'x cos x'],[-c,'sin x']]),jn([[-c,'x sin x'],[c,'cos x']])],rf:[['r-trig','sin・cos とは？']]},
+    {body:'x cos x',u:'x',vp:'cos x',du:'1',v:'sin x',mid:'x sin x − ∫sin x dx',ans:jn([[c,'x sin x'],[c,'cos x']]),
+      wr:[jn([[c,'x sin x'],[-c,'cos x']]),jn([[-c,'x sin x'],[c,'cos x']]),jn([[c,'x sin x']]),jn([[c,'x cos x'],[c,'sin x']]),jn([[c,'x sin x'],[2*c,'cos x']])],rf:[['r-trig','sin・cos とは？']]},
+    {body:'ln x',u:'ln x',vp:'1',du:fr(1,'x'),v:'x',mid:'x ln x − ∫1 dx',ans:jn([[c,'x ln x'],[-c,'x']]),
+      wr:[jn([[c,'x ln x'],[c,'x']]),jn([[c,'x ln x']]),tm(c,1,fr(1,'x')),jn([[c,'ln x'],[-c,'x']]),jn([[c,'x ln x'],[-2*c,'x']])],rf:[['r-ln','ln x と 1/x とは？']]},
+    {body:'x ln x',u:'ln x',vp:'x',du:fr(1,'x'),v:fr(X2,2),mid:`${fr(X2,2)}ln x − ∫${fr('x',2)}dx`,
+      ans:jn([[c,X2+' ln x',2],[-c,X2,4]]),
+      wr:[jn([[c,X2+' ln x',2],[-c,X2,2]]),jn([[c,X2+' ln x',2],[c,X2,4]]),jn([[c,X2+' ln x',2]]),jn([[c,X2+' ln x',2],[-c,'x',4]]),jn([[c,X2+' ln x',2],[-c,X2,8]])],rf:[['r-ln','ln x と 1/x とは？']]}][t];
+  return{q:tm(c,1,D.body),ans:D.ans,wrongs:D.wr,
+    steps:[
+      [`u = ${D.u},　v′ = ${D.vp}`,'微分すると簡単になるほうを u に、積分しやすいほうを v′ にします。'],
+      [`u′ = ${D.du},　v = ${D.v}`,'u は微分、v′ は積分します。'],
+      [D.mid,'公式 ∫uv′dx = uv − ∫u′v dx に当てはめます。'],
+      [`→ ${D.ans}`,c>1?`残りの積分を計算し、係数 ${c} を全体に掛けて整理します。`:'残りの積分を計算して、答えです。']],
+    rules:'∫u v′ dx = uv − ∫u′v dx',
+    refs:[['r-parts','部分積分とは？'],...D.rf]};
+});
+/*TPL-END*/
+
+let state={mode:'d',lvl:1,src:'n',wrong:[],last:null,cur:null,answered:false,sc:0,tt:0,st:0,bs:0};
+const pkey=q=>q.tid?`${q.kind}|${q.tid}|${JSON.stringify(q.par)}`:q.kind+'|'+expr(q.q);
+
+// 端末への保存（保存できない環境でも、そのまま動く）
+const KEY='bibun-drill-v1';
+const KINDS=['pow','sin','cos','ln','lna','exp','inv'];
+const okTerm=t=>!!t&&typeof t.c==='number'&&isFinite(t.c)&&typeof t.p==='number'&&KINDS.includes(t.k);
+const okProb=q=>{
+  if(!q||(q.kind!=='d'&&q.kind!=='i'))return false;
+  if(q.tid){
+    const t=tby(q.tid);
+    return !!t&&t.kind===q.kind&&!!q.par&&typeof q.par==='object'&&Object.values(q.par).every(v=>Number.isFinite(v));
+  }
+  return Array.isArray(q.q)&&q.q.length>0&&q.q.every(okTerm)&&Array.isArray(q.ans)&&q.ans.every(okTerm);
+};
+function loadSaved(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(!s)return;
+    if(Array.isArray(s.wrong))state.wrong=s.wrong.filter(okProb);
+    if(Number.isFinite(s.bs))state.bs=Math.max(0,s.bs|0);
+  }catch(e){}
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({wrong:state.wrong,bs:state.bs}))}catch(e){}}
+const $=id=>document.getElementById(id);
+
+function emptyReview(){
+  state.cur=null;state.answered=false;
+  $('prob').innerHTML='<span class="empty">復習する問題はありません</span>';
+  $('ch').innerHTML='';
+  $('fb').innerHTML='<p class="hint">間違えた問題がここにたまります。復習で正解すると、その問題は一覧から外れます。</p><button class="next" id="nx">新しい問題に戻る</button>';
+  $('nx').onclick=()=>setSrc('n');
+}
+function next(){
+  let p;
+  if(state.src==='r'){
+    if(!state.wrong.length){emptyReview();return}
+    const pool=state.wrong.length>1?state.wrong.filter(w=>w!==state.last):state.wrong;
+    p=pick(pool);
+  }else{
+    p=genProblem(state.mode==='m'?pick(['d','i']):state.mode,state.lvl);
+  }
+  state.last=p;
+  const kind=p.kind;
+  const suffix=kind==='i'?' + C':'';
+  let correct,list,qh;
+  if(p.tid){
+    const v=viewT(p);
+    correct=v.ans+suffix;qh=v.q;
+    list=[correct,...v.wrongs.map(w=>w+suffix)];
+  }else{
+    correct=expr(p.ans)+suffix;qh=expr(p.q);
+    const opts=new Set([correct]);
+    let tries=0;
+    while(opts.size<4&&tries++<80){opts.add(expr(perturb(p.ans))+suffix)}
+    list=[...opts];
+  }
+  for(let i=list.length-1;i>0;i--){const j=R(0,i);[list[i],list[j]]=[list[j],list[i]]}
+  state.cur={p,correct,list};state.answered=false;
+  $('prob').innerHTML=kind==='d'
+    ?`<span class="op">d/dx</span> ( ${qh} )`
+    :`<span class="op">∫</span> ( ${qh} ) <span class="op">dx</span>`;
+  $('ch').innerHTML=list.map((s,i)=>`<button class="choice" data-i="${i}"><i>${i+1}</i><span>${s}</span></button>`).join('');
+  $('fb').innerHTML='';
+}
+function answer(i){
+  if(state.answered||!state.cur)return;
+  state.answered=true;
+  const {p,correct,list}=state.cur;
+  const ok=list[i]===correct;
+  state.tt++;
+  if(ok){state.sc++;state.st++;state.bs=Math.max(state.bs,state.st)}else state.st=0;
+  const wi=state.wrong.findIndex(w=>pkey(w)===pkey(p));
+  if(ok){if(wi>=0)state.wrong.splice(wi,1)}else if(wi<0)state.wrong.push(p);
+  document.querySelectorAll('.choice').forEach((b,j)=>{
+    b.disabled=true;
+    if(list[j]===correct)b.classList.add('ok');
+    else if(j===i)b.classList.add('ng');
+  });
+  $('fb').innerHTML=`<div class="res"><div class="msg ${ok?'ok':'ng'}">${ok?'正解！':'不正解。正しい答えはハイライトの選択肢です'}</div><button class="next" id="nx">次の問題</button></div>${explain(p,correct)}`;
+  $('nx').onclick=next;$('nx').focus();
+  stats();save();
+}
+function stats(){$('sc').textContent=state.sc;$('tt').textContent=state.tt;$('st').textContent=state.st;$('bs').textContent=state.bs;$('rv').textContent=state.wrong.length}
+
+$('ch').addEventListener('click',e=>{const b=e.target.closest('.choice');if(b)answer(+b.dataset.i)});
+function syncSrc(){$('src').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===state.src))}
+function setSrc(v){state.src=v;syncSrc();next()}
+function seg(id,key){
+  $(id).addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    $(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    state[key]=key==='lvl'?+b.dataset.v:b.dataset.v;
+    if(key!=='src'&&state.src==='r'){state.src='n';syncSrc()}
+    next();
+  });
+}
+seg('mode','mode');seg('lvl','lvl');seg('src','src');
+
+function openRef(id){
+  const d=$('ref');
+  if(!d.open)d.showModal();
+  const t=id&&document.getElementById(id);
+  if(t){t.scrollIntoView({block:'start'});t.focus({preventScroll:true})}
+  else $('refBody').scrollTop=0;
+}
+$('refBtn').addEventListener('click',()=>openRef());
+$('refX').addEventListener('click',()=>$('ref').close());
+$('ref').addEventListener('click',e=>{if(e.target===$('ref'))$('ref').close()});
+$('fb').addEventListener('click',e=>{const b=e.target.closest('.lnk');if(b)openRef(b.dataset.ref)});
+$('refBody').addEventListener('click',e=>{const b=e.target.closest('.toc button');if(b)openRef(b.dataset.ref)});
+document.addEventListener('keydown',e=>{
+  if($('ref').open)return;
+  if(e.key>='1'&&e.key<='4')answer(+e.key-1);
+  else if(e.key==='Enter'&&state.answered&&!e.target.closest('.lnk,.ghost')){e.preventDefault();next()}
+});
+loadSaved();stats();next();
+</script>
+<script>
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+}
+</script>
+</body>
+</html>
