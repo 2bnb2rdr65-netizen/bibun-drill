@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef1f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10141b" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="IELTS単語">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>IELTS単語ドリル</title>
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column — step plan, mode tabs, filters, a single index card in focus, progress strip */
+:root{
+  --bg:#eef1f4; --paper:#ffffff; --ink:#18212e; --muted:#5d6878; --line:#d5dbe3;
+  --accent:#1f4fd6; --accent-soft:#e3eafc; --good:#1f8a55; --good-soft:#dff3e8; --bad:#c23a3a; --bad-soft:#fbe5e5;
+  --note:#f6f1e2; --note-ink:#5a4a1c;
+  --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+  --mono:"IBM Plex Mono","Noto Sans Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10141b; --paper:#19202b; --ink:#e7ecf3; --muted:#9aa5b5; --line:#2c3543;
+  --accent:#7c9dff; --accent-soft:#1f2a47; --good:#5fcf95; --good-soft:#15301f; --bad:#ff8a8a; --bad-soft:#3a1c1c;
+  --note:#2a2618; --note-ink:#e6d7a8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10141b; --paper:#19202b; --ink:#e7ecf3; --muted:#9aa5b5; --line:#2c3543;
+  --accent:#7c9dff; --accent-soft:#1f2a47; --good:#5fcf95; --good-soft:#15301f; --bad:#ff8a8a; --bad-soft:#3a1c1c;
+  --note:#2a2618; --note-ink:#e6d7a8; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;padding:24px 16px 48px}
+.wrap{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.02em;margin:0}
+h1 span{color:var(--accent)}
+.stat{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* step plan */
+.plan{display:grid;gap:8px}
+.plan p{margin:0;font-size:13px;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.step{font:inherit;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;color:var(--ink);display:grid;gap:4px;min-width:0}
+.step.now{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.step .t{font-weight:700;font-size:14px;display:flex;justify-content:space-between;gap:6px;align-items:center;flex-wrap:wrap}
+.step .b{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.step .n{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.here{font-size:10px;font-weight:700;color:var(--paper);background:var(--accent);border-radius:3px;padding:0 5px;line-height:1.6}
+.mini{height:6px;border-radius:3px;background:var(--line);overflow:hidden;display:flex}
+.mini span{display:block;height:100%}
+
+nav{display:grid;grid-template-columns:repeat(4,1fr);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:4px;gap:4px}
+nav button{font:inherit;font-weight:700;font-size:13px;border:0;background:none;color:var(--muted);padding:9px 2px;border-radius:7px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--accent);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px}
+.filters label,.qtype{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted);letter-spacing:.04em}
+select{font:inherit;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%;min-width:0}
+
+.chip{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;padding:1px 7px;border-radius:4px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.st{border-color:var(--accent);color:var(--accent)}
+
+/* the card */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;min-height:320px;padding:22px 24px 20px;position:relative;
+  background-image:linear-gradient(var(--paper) 62px,transparent 62px),repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);
+  display:flex;flex-direction:column;cursor:pointer;user-select:none}
+.card.open{background-image:none}
+.card::before{content:"";position:absolute;left:0;right:0;top:61px;height:2px;background:var(--bad);opacity:.55}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.meta .tags{display:flex;gap:6px;flex-wrap:wrap}
+.word{font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,54px);letter-spacing:-.025em;line-height:1.05;margin:40px 0 6px;overflow-wrap:anywhere}
+.ipa{font-family:var(--mono);font-size:15px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.say{border:1px solid var(--line);background:var(--paper);color:var(--accent);border-radius:999px;font:inherit;font-size:12px;padding:2px 10px;cursor:pointer}
+.back{margin-top:16px;display:grid;gap:10px;background:var(--paper);padding-top:4px;cursor:auto;user-select:text}
+.mean{font-size:21px;font-weight:700}
+.kv{display:grid;grid-template-columns:5.5em 1fr;gap:4px 10px;font-size:14px;margin:0}
+.kv dt{color:var(--muted);font-size:12px;padding-top:2px}
+.kv dd{margin:0;min-width:0}
+.kv dd.en{font-family:var(--display);font-weight:500}
+.note{background:var(--note);color:var(--note-ink);border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.7}
+.note b{font-size:11px;letter-spacing:.08em;display:block;margin-bottom:2px}
+.ex{font-size:14px;color:var(--muted)}
+.ex b{color:var(--ink);font-weight:700}
+.hint{margin-top:auto;padding-top:16px;font-size:12px;color:var(--muted);text-align:center}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{font:inherit;font-weight:700;font-size:15px;padding:13px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn.no{color:var(--bad);border-color:var(--bad);background:var(--bad-soft)}
+.btn.yes{color:var(--good);border-color:var(--good);background:var(--good-soft)}
+.btn.primary{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* quiz & spelling */
+.q{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:22px 24px;display:flex;flex-direction:column}
+.q .word{margin:18px 0 4px}
+.qtype{margin-bottom:10px;max-width:260px}
+.prompt{font-size:13px;color:var(--muted);margin-top:16px}
+.choices{display:grid;gap:8px;margin-top:10px}
+.choice{text-align:left;font:inherit;font-size:16px;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;display:flex;gap:12px}
+.choice .k{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:3px}
+.choice.en span:last-child{font-family:var(--display);font-weight:500;font-size:17px}
+.choice.right{border-color:var(--good);background:var(--good-soft)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.feedback{margin-top:14px;font-size:14px;display:grid;gap:8px}
+.feedback:empty{display:none}
+.score{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.listen{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 8px}
+.listen .btn{padding:12px 18px}
+.spell{display:flex;gap:8px;margin-top:14px}
+.spell input{flex:1;min-width:0;font-family:var(--mono);font-size:20px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.spell input.right{border-color:var(--good);background:var(--good-soft)}
+.spell input.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.diff{font-family:var(--mono);font-size:18px;letter-spacing:.04em}
+.diff .x{color:var(--bad);text-decoration:underline}
+
+/* list */
+h3{font-size:13px;margin:0 0 8px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.topics{display:grid;gap:6px;margin-bottom:18px}
+.trow{display:grid;grid-template-columns:9em 1fr 3.5em;gap:10px;align-items:center;font-size:13px}
+.trow .n{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.add{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:8px}
+.add h2{font-size:14px;margin:0}
+.add input{font:inherit;padding:9px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.add .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lfilter{display:flex;gap:8px;align-items:center;margin:20px 0 8px;flex-wrap:wrap}
+.lfilter h3{margin:0;flex:1}
+.lfilter select{width:auto}
+.list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.item{border-bottom:1px solid var(--line)}
+.item summary{list-style:none;display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:10px 2px;align-items:center;cursor:pointer}
+.item summary::-webkit-details-marker{display:none}
+.item .w{font-family:var(--display);font-weight:500;font-size:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.item .m{font-size:13px;color:var(--muted);grid-column:1}
+.item .body{display:grid;gap:8px;padding:0 2px 14px}
+.lv{grid-row:1/3;grid-column:2;display:flex;gap:3px}
+.lv i{width:7px;height:16px;border-radius:2px;background:var(--line)}
+.lv i.on{background:var(--good)}
+.del{border:0;background:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0;text-decoration:underline;justify-self:start}
+.more{justify-self:center}
+.prog{display:flex;flex-direction:column;gap:6px}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;display:flex}
+.bar span{display:block;height:100%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0}
+.empty{text-align:center;color:var(--muted);padding:40px 12px;background:var(--paper);border:1px dashed var(--line);border-radius:6px}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s}.card:active{transform:scale(.99)}}
+@media (max-width:440px){.steps{grid-template-columns:1fr}.step{grid-template-columns:1fr auto;align-items:center}.step .mini{grid-column:1/-1}.trow{grid-template-columns:7.5em 1fr 3em}.kv{grid-template-columns:4.8em 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>IELTS <span>単語ドリル</span></h1>
+    <div class="stat" id="stat"></div>
+  </header>
+
+  <section class="plan" aria-label="学習ステップ">
+    <p>英検2級はIELTS Band 5前後が目安です。6.5を取るには、Step 1とStep 2をしっかり定着させましょう。いまのステップの7割が定着すると、「おすすめ」の出題が次のステップに進みます。</p>
+    <div class="steps" id="steps"></div>
+  </section>
+
+  <nav role="tablist">
+    <button role="tab" data-mode="card" aria-selected="true">カード</button>
+    <button role="tab" data-mode="quiz" aria-selected="false">クイズ</button>
+    <button role="tab" data-mode="spell" aria-selected="false">スペル</button>
+    <button role="tab" data-mode="list" aria-selected="false">単語帳</button>
+  </nav>
+
+  <div class="filters" id="filters">
+    <label>レベル<select id="f-step">
+      <option value="auto">おすすめ（自動）</option>
+      <option value="1">Step 1 基礎</option>
+      <option value="2">Step 2 目標</option>
+      <option value="3">Step 3 発展</option>
+      <option value="all">すべて</option>
+    </select></label>
+    <label>トピック<select id="f-topic"></select></label>
+    <label>出題<select id="f-set">
+      <option value="all">すべて</option>
+      <option value="weak">苦手のみ（習熟度2以下）</option>
+      <option value="new">未習得のみ</option>
+    </select></label>
+    <label>発音<select id="f-accent">
+      <option value="en-GB">イギリス英語</option>
+      <option value="en-AU">オーストラリア英語</option>
+      <option value="en-US">アメリカ英語</option>
+    </select></label>
+  </div>
+
+  <section id="v-card"></section>
+  <section id="v-quiz" hidden></section>
+  <section id="v-spell" hidden></section>
+  <section id="v-list" hidden></section>
+
+  <div class="prog">
+    <div class="bar" id="bar"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+</div>
+
+<script>
+// [word, IPA (British), 品詞, 意味, 言い換え, よく使う形, 例文, topic, step(1-3), 解説, near-synonym group]
+const RAW=[
+/* ===== アカデミック基礎語 ===== */
+["benefit","ˈbenɪfɪt","名/動","利点、恩恵／恩恵を受ける","advantage, gain","benefit from / the benefits of","Children <b>benefit</b> from spending time outdoors.","core",1,"benefit from 〜 で「〜から恩恵を受ける」。名詞は the benefits of X（Xの利点）の形でTask 2に頻出。advantage と交互に使うと語彙の繰り返しを避けられる。","benefit"],
+["issue","ˈɪʃuː","名","（議論すべき）問題","problem, matter","a serious issue","Climate change is one of the most serious <b>issues</b> of our time.","core",1,"problem より中立的で「議論の対象になる問題」。Task 2の問題文に頻出。address / tackle an issue（問題に取り組む）とセットで覚える。"],
+["factor","ˈfæktə","名","要因","cause, element","a key factor","Cost is a key <b>factor</b> when choosing a university.","core",1,"いくつかある原因のうちの一つを言うときの定番。the main reason の言い換えに a major factor が使える。"],
+["approach","əˈprəʊtʃ","名","取り組み方、方法","method, way","a new approach to","We need a new <b>approach</b> to reducing waste.","core",1,"後ろは to + 名詞／動名詞（approach to reducing）。to reduce としないよう注意。動詞では「近づく」の意味。"],
+["significant","sɪɡˈnɪfɪkənt","形","重要な、（数量が）かなりの","considerable, important","a significant increase","There has been a <b>significant</b> rise in online shopping.","core",1,"Task 1では「大きな変化」を表す定番。big の代わりに使うだけで語彙の印象が上がる。副詞 significantly も頻出。"],
+["aspect","ˈæspekt","名","側面","feature, part","every aspect of","Technology affects every <b>aspect</b> of our lives.","core",1,"various aspects of 〜（〜のさまざまな側面）の形で、話題を広げるときに使える。"],
+["affect","əˈfekt","動","影響を与える","influence, have an impact on","directly affect","Air pollution <b>affects</b> people's health.","core",1,"affect は動詞、effect は名詞（have an effect on）。IELTSで最も多いつづりの混同の一つ。affect on とは言わない。","affect"],
+["impact","ˈɪmpækt","名","影響","effect, consequence","have an impact on","Social media has a huge <b>impact</b> on young people.","core",1,"前置詞は on。a positive / negative impact で、良い面と悪い面を整理するのに便利。","affect"],
+["require","rɪˈkwaɪə","動","必要とする","need, demand","be required to do","Most jobs now <b>require</b> basic computer skills.","core",1,"need のフォーマル版。受け身の be required to do（〜することが求められる）が使いやすい。"],
+["provide","prəˈvaɪd","動","提供する","supply, offer","provide A with B","Schools should <b>provide</b> students with healthy meals.","core",1,"provide A with B（AにBを与える）と provide B for A の2つの形がある。give の言い換え。"],
+["increase","ɪnˈkriːs","動/名","増える／増加","rise, grow","an increase in","The number of tourists <b>increased</b> by 20%.","core",1,"動詞は後ろにアクセント（inˈcrease）、名詞は前（ˈincrease）。「〜の増加」は an increase in 〜（of ではない）。「20%増えた」は by 20%。","up"],
+["reduce","rɪˈdjuːs","動","減らす","cut, lower","reduce costs","Working from home can <b>reduce</b> traffic.","core",1,"「何かを減らす」他動詞。主語自体が「減る」ときは decrease / fall / decline を使う。","down"],
+["available","əˈveɪləbl","形","利用できる、手に入る","accessible, obtainable","widely available","Free Wi-Fi is <b>available</b> in most cafés.","core",1,"名詞の後ろに置く使い方も多い（the information available online）。"],
+["individual","ˌɪndɪˈvɪdʒuəl","名/形","個人／個々の","person, single","individuals and governments","Both <b>individuals</b> and governments must take action.","core",1,"Task 2で「個人 vs 政府」を対比するときに必須。people の繰り返しを避けられる。"],
+["responsibility","rɪˌspɒnsəˈbɪləti","名","責任","duty, obligation","take responsibility for","Parents have a <b>responsibility</b> to teach their children manners.","core",1,"「誰の責任か」を問うTask 2は頻出。It is the responsibility of governments to 〜 の型を覚えると書きやすい。"],
+["evidence","ˈevɪdəns","名","証拠、根拠","proof, data","evidence suggests that","There is strong <b>evidence</b> that exercise improves mood.","core",1,"不可算名詞。an evidence / evidences は誤り。数えるときは a piece of evidence。"],
+["analyse","ˈænəlaɪz","動","分析する","examine, study","analyse data","Researchers <b>analysed</b> data from 2,000 students.","core",2,"イギリス式は analyse、アメリカ式は analyze（どちらも正解）。名詞 analysis、複数形 analyses。"],
+["trend","trend","名","傾向","tendency, pattern","an upward trend","There is a growing <b>trend</b> towards working from home.","core",1,"Task 1でも2でも使える。an upward / downward trend（上昇／下降傾向）。"],
+["crucial","ˈkruːʃl","形","極めて重要な","vital, key","play a crucial role in","Teachers play a <b>crucial</b> role in children's development.","core",1,"important の強い言い換え。play a crucial role in 〜（〜で重要な役割を果たす）は丸ごと覚える。","vital"],
+["essential","ɪˈsenʃl","形","不可欠な","necessary, indispensable","it is essential that","Clean water is <b>essential</b> for good health.","core",1,"なくてはならない、という意味。It is essential that S (should) do の形も。","vital"],
+["potential","pəˈtenʃl","形/名","起こりうる／潜在能力","possible, likely","potential risks","We must consider the <b>potential</b> risks of AI.","core",1,"形容詞「起こりうる」と名詞「潜在能力（reach one's potential）」の両方で使う。"],
+["ensure","ɪnˈʃʊə","動","確実にする","make sure, guarantee","ensure that","Governments should <b>ensure</b> that everyone has access to healthcare.","core",1,"make sure のフォーマル版。insure（保険をかける）と混同しない。"],
+["maintain","meɪnˈteɪn","動","維持する","keep, preserve","maintain a healthy lifestyle","It is hard to <b>maintain</b> a healthy diet when you are busy.","core",1,"keep の言い換え。名詞は maintenance で、つづりが変わる点に注意。"],
+["obtain","əbˈteɪn","動","得る","get, acquire","obtain information","Students can <b>obtain</b> information easily online.","core",1,"get のフォーマル版。Writingで get を多用しないために覚えておく。"],
+["contribute","kənˈtrɪbjuːt","動","貢献する、一因となる","add to, play a part in","contribute to","Fast food <b>contributes</b> to obesity.","core",1,"良い意味（貢献）にも悪い意味（原因の一つ）にも使う。contribute to + 名詞／動名詞。"],
+["consume","kənˈsjuːm","動","消費する","use, use up","consume energy","Rich countries <b>consume</b> far more energy than poorer ones.","core",1,"名詞 consumption（消費）、consumer（消費者）とまとめて覚える。"],
+["generation","ˌdʒenəˈreɪʃn","名","世代","age group","the younger generation","The younger <b>generation</b> spends more time online.","core",1,"世代比較のTask 2で頻出。future generations（将来の世代）は環境問題の定番表現。"],
+["attitude","ˈætɪtjuːd","名","態度、考え方","view, opinion","attitude towards","People's <b>attitudes</b> towards marriage have changed.","core",1,"前置詞は towards（または to）。"],
+["aim","eɪm","名/動","目的／目指す","goal, purpose","aim to do","The <b>aim</b> of the policy is to reduce crime.","core",1,"The aim of X is to do 〜 の型がWritingで使いやすい。"],
+["range","reɪndʒ","名","範囲、幅","variety, selection","a wide range of","The library offers a wide <b>range</b> of services.","core",1,"a wide range of 〜 は many の言い換えとして非常に便利。"],
+
+/* ===== 環境 ===== */
+["pollution","pəˈluːʃn","名","汚染","contamination","air pollution","Air <b>pollution</b> is a major problem in large cities.","env",1,"動詞は pollute。air / water / noise pollution（大気・水質・騒音汚染）を使い分ける。"],
+["renewable","rɪˈnjuːəbl","形","再生可能な","sustainable, green","renewable energy","Many countries are investing in <b>renewable</b> energy.","env",1,"renewable energy は環境トピックの必須語。solar power（太陽光）、wind power（風力）と一緒に覚える。","green"],
+["recycle","ˌriːˈsaɪkl","動","リサイクルする","reuse, reprocess","recycle waste","More households should <b>recycle</b> their rubbish.","env",1,"名詞 recycling は不可算。reduce, reuse, recycle の3Rも使える。"],
+["waste","weɪst","名/動","ごみ、無駄／無駄にする","rubbish, squander","reduce waste","Supermarkets produce huge amounts of food <b>waste</b>.","env",1,"「ごみ」はイギリス英語で rubbish、アメリカ英語で garbage / trash。Writingでは waste が最も無難。"],
+["endangered","ɪnˈdeɪndʒəd","形","絶滅の危機にある","at risk, threatened","endangered species","Pandas are no longer listed as an <b>endangered</b> species.","env",1,"endangered species（絶滅危惧種）で覚える。dangerous（危険な）とは意味が違う。"],
+["fossil fuel","ˈfɒsl ˌfjuːəl","名","化石燃料","coal, oil and gas","burn fossil fuels","Burning <b>fossil fuels</b> releases carbon dioxide.","env",1,"通常は複数形 fossil fuels。renewable energy と対比させて書くと論理が明確になる。"],
+["habitat","ˈhæbɪtæt","名","生息地","natural environment, home","natural habitat","Many species are losing their natural <b>habitat</b>.","env",1,"動物の「住む場所」。destroy / protect habitats の形で使う。"],
+["sustainable","səˈsteɪnəbl","形","持続可能な","viable, long-lasting","sustainable development","Cycling is a far more <b>sustainable</b> way to commute.","env",1,"環境を壊さず長く続けられる、という意味。名詞 sustainability。","green"],
+["extinct","ɪkˈstɪŋkt","形","絶滅した","died out, wiped out","become extinct","Many species could become <b>extinct</b> within decades.","env",2,"名詞 extinction（絶滅）。endangered（絶滅しそう）と extinct（絶滅した）の違いに注意。"],
+["deforestation","ˌdiːˌfɒrɪˈsteɪʃn","名","森林破壊","clearing of forests","large-scale deforestation","<b>Deforestation</b> is destroying the Amazon rainforest.","env",2,"de-（取り去る）+ forest + -ation。長い単語なのでスペル練習推奨。"],
+["carbon footprint","ˌkɑːbən ˈfʊtprɪnt","名","二酸化炭素排出量","environmental impact","reduce your carbon footprint","Flying less is the easiest way to reduce your <b>carbon footprint</b>.","env",2,"個人や企業が出すCO2の量。個人ができる環境対策を書くときに便利。"],
+["drought","draʊt","名","干ばつ","water shortage, dry spell","severe drought","The region has suffered from <b>drought</b> for three years.","env",2,"発音は /draʊt/（ドラウト）。つづりと発音が結びつきにくいのでListening注意。"],
+["emission","ɪˈmɪʃn","名","排出（物）","discharge, release","carbon emissions","Governments must cut carbon <b>emissions</b> to meet climate targets.","env",2,"ほぼ複数形 emissions で使う。cut / reduce emissions とセットで。"],
+["biodiversity","ˌbaɪəʊdaɪˈvɜːsəti","名","生物多様性","variety of species","loss of biodiversity","Deforestation is the main cause of the loss of <b>biodiversity</b>.","env",2,"bio（生物）+ diversity（多様性）。環境Readingの頻出語。"],
+["deteriorate","dɪˈtɪəriəreɪt","動","悪化する","worsen, decline","air quality deteriorates","Air quality in many cities has <b>deteriorated</b> over the past decade.","env",2,"get worse の言い換え。自動詞なので「〜を悪化させる」には exacerbate や worsen を使う。","worse"],
+["contaminate","kənˈtæmɪneɪt","動","汚染する","pollute, poison","contaminated water","Industrial waste has <b>contaminated</b> local rivers.","env",2,"pollute の言い換え。contaminated water（汚染水）のように過去分詞の形容詞用法が多い。"],
+["conserve","kənˈsɜːv","動","保護する、節約する","preserve, save","conserve energy","Households can <b>conserve</b> energy by insulating their homes.","env",2,"名詞 conservation（保護）。conserve energy / water（節約）と conserve wildlife（保護）の2つの意味。"],
+["depletion","dɪˈpliːʃn","名","枯渇","exhaustion, using up","the depletion of resources","The rapid <b>depletion</b> of fossil fuels is a serious concern.","env",3,"動詞 deplete（使い果たす）。the ozone layer depletion（オゾン層の破壊）も。"],
+["mitigate","ˈmɪtɪɡeɪt","動","緩和する","lessen, reduce the impact of","mitigate the effects of","Planting trees can help <b>mitigate</b> the effects of climate change.","env",3,"悪い影響を「完全には消せないが小さくする」。Band 7以上を狙う表現。","ease"],
+["irreversible","ˌɪrɪˈvɜːsəbl","形","取り返しのつかない","permanent, irreparable","irreversible damage","Some scientists fear the damage may already be <b>irreversible</b>.","env",3,"ir（否定）+ reversible（元に戻せる）。irreversible damage の形で覚える。"],
+
+/* ===== 教育 ===== */
+["academic","ˌækəˈdemɪk","形","学業の、学問の","educational, scholarly","academic performance","Sleep has a strong effect on <b>academic</b> performance.","edu",1,"academic performance / achievement（学業成績）が頻出。発音は ア-カ-デ-ミック（デにアクセント）。"],
+["qualification","ˌkwɒlɪfɪˈkeɪʃn","名","資格、学位","certificate, degree","gain a qualification","Many jobs require a university <b>qualification</b>.","edu",1,"イギリス英語では学位・資格の総称。gain / obtain a qualification。"],
+["graduate","ˈɡrædʒueɪt","動/名","卒業する／卒業生","finish one's studies","graduate from","She <b>graduated</b> from university in 2020.","edu",1,"graduate from 〜（from を忘れない）。動詞は語尾 /eɪt/、名詞は /ət/ と発音が変わる。"],
+["tuition fees","tjuˈɪʃn fiːz","名","授業料","course fees","pay tuition fees","Should <b>tuition fees</b> be paid by the government?","edu",1,"大学の無償化を問うTask 2で頻出。イギリス英語では複数形 fees。"],
+["motivate","ˈməʊtɪveɪt","動","やる気にさせる","inspire, stimulate","motivate students","Good teachers know how to <b>motivate</b> their students.","edu",1,"名詞 motivation、形容詞 motivated（やる気のある）。motivate 人 to do の形も。","encourage"],
+["compulsory","kəmˈpʌlsəri","形","義務の、必修の","mandatory, obligatory","compulsory education","In many countries, education is <b>compulsory</b> until the age of 16.","edu",1,"「〜を必修にすべきか」はTask 2の定番テーマ。反対語は optional / voluntary。"],
+["distance learning","ˌdɪstəns ˈlɜːnɪŋ","名","遠隔学習","online learning","","<b>Distance learning</b> allows people to study while working.","edu",1,"online learning / e-learning とほぼ同じ。face-to-face learning（対面学習）と対比させる。"],
+["assess","əˈses","動","評価する","evaluate, judge","assess performance","Students are <b>assessed</b> through coursework and exams.","edu",2,"名詞 assessment。exams vs continuous assessment（試験か平常評価か）のテーマで出る。"],
+["peer","pɪə","名","同年代の仲間","classmate, contemporary","peer pressure","Teenagers are strongly influenced by their <b>peers</b>.","edu",2,"peer pressure（同調圧力）は教育・若者の話題で頻出。"],
+["curriculum","kəˈrɪkjələm","名","教育課程、カリキュラム","syllabus, programme of study","the school curriculum","Financial skills should be part of the school <b>curriculum</b>.","edu",2,"「〜を学校で教えるべきか」のTask 2で必須。複数形は curricula（curriculums も可）。"],
+["literacy","ˈlɪtərəsi","名","読み書きの能力","reading and writing ability","literacy rate","Adult <b>literacy</b> rates have risen sharply in the region.","edu",2,"literacy rate はTask 1の表でもよく出る。digital literacy（ITを使いこなす力）も。"],
+["tertiary","ˈtɜːʃəri","形","（教育が）高等の","higher, university-level","tertiary education","Should <b>tertiary</b> education be free for all students?","edu",2,"primary（初等）→ secondary（中等）→ tertiary（高等）の順で覚える。"],
+["vocational","vəʊˈkeɪʃənl","形","職業訓練の","practical, job-related","vocational training","<b>Vocational</b> courses prepare students for specific careers.","edu",2,"大学教育 vs 職業訓練の比較は頻出テーマ。academic と対比して使う。"],
+["discipline","ˈdɪsəplɪn","名","規律、学問分野","self-control, field of study","school discipline","Strict <b>discipline</b> in schools has both supporters and critics.","edu",2,"「しつけ・規律」と「学問分野」の2つの意味。Readingでは文脈で判断する。"],
+["cognitive","ˈkɒɡnətɪv","形","認知の","mental, intellectual","cognitive development","Reading aloud supports children's <b>cognitive</b> development.","edu",3,"考える・覚える・理解する脳の働きのこと。Readingの心理学系パッセージで頻出。"],
+["rote learning","ˈrəʊt ˌlɜːnɪŋ","名","丸暗記の学習","memorisation, learning by repetition","rely on rote learning","Critics argue that <b>rote learning</b> discourages creativity.","edu",3,"critical thinking（批判的思考）と対比させてTask 2で使える。"],
+
+/* ===== テクノロジー ===== */
+["device","dɪˈvaɪs","名","機器、端末","gadget, machine","electronic devices","Children spend hours on electronic <b>devices</b> every day.","tech",1,"スマホ・タブレットなどをまとめて言える便利な語。動詞 devise（考案する）とつづりが違う。"],
+["access","ˈækses","名/動","利用（の機会）／アクセスする","entry, use","have access to","Not everyone has <b>access</b> to the internet.","tech",1,"名詞は access to 〜。動詞は前置詞なしで access the internet（×access to the internet）。"],
+["artificial","ˌɑːtɪˈfɪʃl","形","人工の","man-made, synthetic","artificial intelligence","<b>Artificial</b> intelligence is changing many industries.","tech",1,"artificial intelligence（AI）で頻出。反対語 natural。"],
+["convenient","kənˈviːniənt","形","便利な","handy, easy to use","more convenient","Online shopping is more <b>convenient</b> than going to a store.","tech",1,"人を主語にしない（×I am convenient）。It is convenient for me が正しい形。名詞 convenience。"],
+["innovation","ˌɪnəˈveɪʃn","名","革新、新しい技術","breakthrough, invention","technological innovation","Technological <b>innovation</b> has transformed the way we work.","tech",1,"形容詞 innovative（革新的な）。new technology の言い換え。"],
+["privacy","ˈprɪvəsi","名","プライバシー","personal freedom, confidentiality","invade privacy","Social media companies collect data that may invade users' <b>privacy</b>.","tech",1,"イギリス発音は /ˈprɪvəsi/（プリヴァシー）。invade / protect privacy の形で使う。"],
+["dependence","dɪˈpendəns","名","依存","reliance","dependence on technology","Young people's <b>dependence</b> on smartphones is growing.","tech",1,"前置詞は on。形容詞 dependent on 〜。","depend"],
+["addiction","əˈdɪkʃn","名","依存症、中毒","compulsion","internet addiction","Gaming <b>addiction</b> is a growing concern among teenagers.","tech",2,"dependence より強く「やめられない」状態。be addicted to 〜（to の後ろは名詞／動名詞）。","depend"],
+["revolutionise","ˌrevəˈluːʃənaɪz","動","大変革をもたらす","transform, change completely","revolutionise the way we","The internet has <b>revolutionised</b> the way we communicate.","tech",2,"change の強い言い換え。the way we 〜 と組み合わせるのが定番。アメリカ式は -ize。"],
+["cyberbullying","ˈsaɪbəbʊliɪŋ","名","ネット上のいじめ","online harassment","","<b>Cyberbullying</b> can have serious effects on mental health.","tech",2,"SNSの悪影響を論じるときの具体例として使える。"],
+["obsolete","ˈɒbsəliːt","形","時代遅れの、廃れた","outdated, out of date","become obsolete","Many traditional skills may soon become <b>obsolete</b>.","tech",2,"old-fashioned よりフォーマル。become obsolete の形で使うことが多い。"],
+["automation","ˌɔːtəˈmeɪʃn","名","自動化","mechanisation","job losses due to automation","<b>Automation</b> threatens many jobs in manufacturing.","tech",2,"AI・ロボットと雇用のTask 2で必須。動詞 automate、形容詞 automated。"],
+["surveillance","sɜːˈveɪləns","名","監視","monitoring, observation","surveillance cameras","The use of <b>surveillance</b> cameras raises privacy concerns.","tech",3,"CCTV（防犯カメラ）の話題で出る。つづりが難しいのでスペル練習推奨。"],
+["unprecedented","ʌnˈpresɪdentɪd","形","前例のない","unparalleled, never seen before","unprecedented growth","The internet has given us <b>unprecedented</b> access to information.","tech",3,"un + precedent（前例）+ ed。Band 7以上の語彙として効果的。"],
+["infringe","ɪnˈfrɪndʒ","動","侵害する","violate, breach","infringe on privacy","Some argue that tracking apps <b>infringe</b> on personal privacy.","tech",3,"infringe on / upon 〜。権利・プライバシー・著作権について使う。"],
+
+/* ===== 健康 ===== */
+["balanced diet","ˌbælənst ˈdaɪət","名","バランスの取れた食事","healthy eating","eat a balanced diet","Children need a <b>balanced diet</b> to grow properly.","health",1,"diet は「ダイエット」ではなく「普段の食事」の意味。a healthy / poor diet も使う。"],
+["symptom","ˈsɪmptəm","名","症状","sign, indication","symptoms of stress","Headaches can be a <b>symptom</b> of stress.","health",1,"symptoms of 〜（〜の症状）。p を発音しない人も多い。"],
+["treatment","ˈtriːtmənt","名","治療","therapy, care","medical treatment","Many people cannot afford medical <b>treatment</b>.","health",1,"動詞 treat（治療する、扱う）。prevention（予防）と対比させるとTask 2が書きやすい。"],
+["mental health","ˌmentl ˈhelθ","名","心の健康","psychological well-being","","Social media can harm teenagers' <b>mental health</b>.","health",1,"physical health（身体の健康）とセットで。"],
+["lifestyle","ˈlaɪfstaɪl","名","生活習慣","way of life","an unhealthy lifestyle","An unhealthy <b>lifestyle</b> can lead to serious illness.","health",1,"lead to 〜（〜につながる）と一緒に使うと因果関係が書きやすい。"],
+["processed food","ˌprəʊsest ˈfuːd","名","加工食品","junk food, ready meals","","Eating too much <b>processed food</b> is linked to obesity.","health",1,"fresh food と対比して使う。be linked to 〜（〜と関連がある）も覚える。"],
+["obesity","əʊˈbiːsəti","名","肥満","being overweight","childhood obesity","Childhood <b>obesity</b> has doubled in the last twenty years.","health",1,"形容詞 obese。fat より客観的で、Writingではこちらを使う。"],
+["life expectancy","ˌlaɪf ɪkˈspektənsi","名","平均寿命","lifespan","rising life expectancy","<b>Life expectancy</b> in Japan is among the highest in the world.","health",1,"Task 1のグラフでも頻出。rise / increase と組み合わせて使う。"],
+["well-being","ˌwel ˈbiːɪŋ","名","心身の健康、幸福","welfare, health and happiness","mental well-being","Regular exercise improves both physical and mental <b>well-being</b>.","health",1,"health より広く「満たされた状態」。wellbeing とハイフンなしでも可。"],
+["nutrition","njuˈtrɪʃn","名","栄養","nourishment, diet","good nutrition","Good <b>nutrition</b> is essential for children's growth.","health",2,"形容詞 nutritious（栄養のある）。nutrients（栄養素）も合わせて。"],
+["vulnerable","ˈvʌlnərəbl","形","影響を受けやすい、弱い","susceptible, at risk","vulnerable to","The elderly are particularly <b>vulnerable</b> to the flu.","health",2,"vulnerable to 〜。高齢者や子どもなどの「弱い立場の人」について書くときに便利。"],
+["sedentary","ˈsedntri","形","座りがちな、運動不足の","inactive","a sedentary lifestyle","A <b>sedentary</b> lifestyle increases the risk of heart disease.","health",2,"a sedentary lifestyle でほぼ固定。運動不足と健康のテーマで必須。"],
+["chronic","ˈkrɒnɪk","形","慢性の","long-term, persistent","chronic disease","<b>Chronic</b> diseases place a heavy burden on health systems.","health",2,"反対語 acute（急性の）。発音は /ˈkrɒnɪk/（クロニック）。"],
+["preventive","prɪˈventɪv","形","予防の","preventative, precautionary","preventive medicine","Investing in <b>preventive</b> care saves money in the long run.","health",2,"preventative とも書く。prevention is better than cure（予防は治療に勝る）も使える。"],
+["epidemic","ˌepɪˈdemɪk","名","流行病、蔓延","outbreak","an obesity epidemic","Some experts describe loneliness as a modern <b>epidemic</b>.","health",2,"比喩的に「社会問題の蔓延」にも使う。世界的流行は pandemic。"],
+["detrimental","ˌdetrɪˈmentl","形","有害な","harmful, damaging","a detrimental effect on","Excessive screen time can have a <b>detrimental</b> effect on sleep.","health",2,"harmful の言い換え。have a detrimental effect on 〜 で丸ごと覚える。"],
+
+/* ===== 経済・仕事 ===== */
+["salary","ˈsæləri","名","給料","pay, wages","a high salary","Doctors usually earn a high <b>salary</b>.","work",1,"月給・年俸。時給・週給は wages。earn a salary の形で使う。"],
+["career","kəˈrɪə","名","職業、経歴","profession, occupation","a career in","She wants a <b>career</b> in medicine.","work",1,"発音は /kəˈrɪə/（カリア、後ろにアクセント）。carrier（運ぶもの）と混同しない。"],
+["employer","ɪmˈplɔɪə","名","雇用主","company, boss","","<b>Employers</b> value communication skills.","work",1,"employee（従業員）とペアで覚える。employment（雇用）も。"],
+["flexible","ˈfleksəbl","形","柔軟な","adaptable","flexible working hours","<b>Flexible</b> working hours help parents balance work and family.","work",1,"flexible working hours / flexible working は働き方の話題で頻出。"],
+["job satisfaction","ˌdʒɒb ˌsætɪsˈfækʃn","名","仕事のやりがい","fulfilment at work","","Many people value <b>job satisfaction</b> more than salary.","work",1,"「お金かやりがいか」のTask 2で必須の表現。"],
+["economy","ɪˈkɒnəmi","名","経済","financial system","boost the economy","Tourism helps to boost the local <b>economy</b>.","work",1,"economic（経済の）と economical（節約になる、安上がりな）は意味が違う。"],
+["invest","ɪnˈvest","動","投資する","put money into, spend on","invest in","Governments should <b>invest</b> more in public transport.","work",1,"invest in 〜。お金だけでなく時間にも使える（invest time in）。名詞 investment。"],
+["retire","rɪˈtaɪə","動","退職する","stop working","retirement age","Many people <b>retire</b> at the age of 65.","work",1,"名詞 retirement。retirement age（定年）は高齢化の話題で出る。"],
+["unemployment","ˌʌnɪmˈplɔɪmənt","名","失業","joblessness","the unemployment rate","Youth <b>unemployment</b> remains high in southern Europe.","work",1,"the unemployment rate（失業率）はTask 1で頻出。形容詞 unemployed。"],
+["productivity","ˌprɒdʌkˈtɪvəti","名","生産性","efficiency, output","boost productivity","Flexible working hours can boost <b>productivity</b>.","work",1,"形容詞 productive。boost / improve productivity の形で。"],
+["incentive","ɪnˈsentɪv","名","動機付け、奨励策","motivation, encouragement","a financial incentive","Tax breaks give companies an <b>incentive</b> to invest.","work",2,"an incentive to do 〜。政府の政策を提案するときに便利。"],
+["subsidise","ˈsʌbsɪdaɪz","動","補助金を出す","fund, finance","government-subsidised","Public transport should be <b>subsidised</b> by the government.","work",2,"名詞 subsidy（補助金）。「政府が費用を負担すべきか」のTask 2で使える。"],
+["revenue","ˈrevənjuː","名","歳入、収益","income, earnings","tax revenue","Tourism generates significant <b>revenue</b> for the country.","work",2,"generate revenue（収益を生む）の形で覚える。"],
+["workforce","ˈwɜːkfɔːs","名","労働力、全従業員","labour force, employees","a skilled workforce","Women now make up nearly half of the <b>workforce</b>.","work",2,"make up（占める）とよく一緒に使う。"],
+["globalisation","ˌɡləʊbəlaɪˈzeɪʃn","名","グローバル化","internationalisation","the effects of globalisation","<b>Globalisation</b> has made products cheaper but threatens local culture.","work",2,"メリット（安い製品・交流）とデメリット（文化の均一化）を両方書けるようにしておく。"],
+["prosperity","prɒˈsperəti","名","繁栄","wealth, affluence","economic prosperity","Trade has brought <b>prosperity</b> to the region.","work",3,"形容詞 prosperous（繁栄している）。"],
+["disparity","dɪˈspærəti","名","格差","inequality, gap","income disparity","The <b>disparity</b> between rich and poor continues to widen.","work",3,"gap / difference のフォーマル版。the disparity between A and B。"],
+
+/* ===== 社会・政府 ===== */
+["elderly","ˈeldəli","形","高齢の","older, senior","the elderly","The <b>elderly</b> often feel isolated in big cities.","soc",1,"the elderly で「高齢者（全体）」。old people より丁寧な表現。"],
+["ageing population","ˌeɪdʒɪŋ ˌpɒpjuˈleɪʃn","名","高齢化する人口","greying population","","Japan has a rapidly <b>ageing population</b>.","soc",1,"アメリカ式は aging。高齢化の原因と対策を問うTask 2は頻出。"],
+["community","kəˈmjuːnəti","名","地域社会","neighbourhood, society","the local community","Volunteers play an important role in the local <b>community</b>.","soc",1,"the local community で「地元」。sense of community（地域のつながり）も。"],
+["equality","iˈkwɒləti","名","平等","fairness, equal rights","gender equality","Gender <b>equality</b> in the workplace has improved.","soc",1,"反対語 inequality。gender equality（男女平等）は頻出。"],
+["immigrant","ˈɪmɪɡrənt","名","移民（入ってくる人）","migrant, newcomer","","Many <b>immigrants</b> bring valuable skills to their new country.","soc",1,"immigrant（入ってくる）／emigrant（出ていく）。移民全般は migrant。"],
+["tradition","trəˈdɪʃn","名","伝統","custom, convention","traditional culture","It is important to preserve local <b>traditions</b>.","soc",1,"形容詞 traditional。preserve traditions（伝統を守る）。","tradition"],
+["poverty","ˈpɒvəti","名","貧困","hardship, deprivation","live in poverty","Millions of people still live in <b>poverty</b>.","soc",1,"形容詞は poor。live in poverty / reduce poverty の形で使う。"],
+["volunteer","ˌvɒlənˈtɪə","名/動","ボランティア（をする）","offer to help unpaid","do voluntary work","Many students <b>volunteer</b> at local charities.","soc",1,"後ろにアクセント（ヴォランティア）。形容詞 voluntary（自発的な、無償の）。"],
+["welfare","ˈwelfeə","名","福祉","social security","the welfare system","An ageing population puts pressure on the <b>welfare</b> system.","soc",1,"the welfare system / welfare state（福祉国家）。"],
+["authority","ɔːˈθɒrəti","名","当局、権限","government, power","local authorities","Local <b>authorities</b> should provide more parks.","soc",2,"複数形 the authorities で「当局」。government の言い換えに使える。"],
+["identity","aɪˈdentəti","名","アイデンティティ、独自性","sense of self, character","cultural identity","Language is an important part of cultural <b>identity</b>.","soc",2,"cultural / national identity。グローバル化の話題で使う。"],
+["diversity","daɪˈvɜːsəti","名","多様性","variety, multiculturalism","cultural diversity","Big cities benefit from cultural <b>diversity</b>.","soc",2,"形容詞 diverse（多様な）。"],
+["legislation","ˌledʒɪsˈleɪʃn","名","法律、法制化","laws, regulation","introduce legislation","The government introduced <b>legislation</b> to ban single-use plastics.","soc",2,"不可算名詞（×a legislation）。「政府が法律で規制すべきか」で使う。"],
+["integrate","ˈɪntɪɡreɪt","動","溶け込む、統合する","assimilate, incorporate","integrate into society","Language classes help immigrants <b>integrate</b> into society.","soc",2,"integrate into 〜。名詞 integration。"],
+["allocate","ˈæləkeɪt","動","割り当てる","assign, distribute","allocate funds","More funds should be <b>allocated</b> to public health.","soc",2,"予算の使い道を問うTask 2で必須。allocate A to B。"],
+["initiative","ɪˈnɪʃətɪv","名","（新しい）取り組み","scheme, programme","a government initiative","The recycling <b>initiative</b> was a great success.","soc",2,"「主体性」の意味もある（take the initiative）。"],
+["demographic","ˌdeməˈɡræfɪk","形","人口統計の","population-related","demographic change","Japan is facing major <b>demographic</b> change.","soc",3,"人口の構成（年齢・性別など）に関すること。Readingの社会学系で出る。"],
+["marginalised","ˈmɑːdʒɪnəlaɪzd","形","社会から取り残された","excluded, disadvantaged","marginalised groups","Libraries provide vital support for <b>marginalised</b> communities.","soc",3,"margin（端）に追いやられた、というイメージ。アメリカ式は -ized。"],
+
+/* ===== 都市・交通 ===== */
+["public transport","ˌpʌblɪk ˈtrænspɔːt","名","公共交通機関","buses and trains","","Better <b>public transport</b> would reduce traffic in cities.","city",1,"イギリス英語は public transport、アメリカ英語は public transportation。"],
+["pedestrian","pəˈdestriən","名","歩行者","walker","a pedestrian zone","The city centre is now a <b>pedestrian</b> zone.","city",1,"Listeningの地図問題・Task 1の地図問題でも頻出。"],
+["residential","ˌrezɪˈdenʃl","形","住宅の","housing, suburban","a residential area","The factory was replaced by a <b>residential</b> area.","city",1,"Task 1の地図（町の変化）で必須。resident（住民）も合わせて。"],
+["rural","ˈrʊərəl","形","田舎の","country, countryside","rural areas","Young people are leaving <b>rural</b> areas for cities.","city",1,"反対語 urban（都市の）。日本人には発音が難しいので音声で確認しておく。"],
+["overcrowded","ˌəʊvəˈkraʊdɪd","形","過密な","packed, crammed","overcrowded cities","Trains are <b>overcrowded</b> during rush hour.","city",1,"over（過剰に）+ crowded（混雑した）。","crowd"],
+["facility","fəˈsɪləti","名","施設","amenity, service","sports facilities","The town needs better sports <b>facilities</b>.","city",1,"複数形 facilities で使うことが多い。Listeningの施設案内で頻出。"],
+["landmark","ˈlændmɑːk","名","名所、目印","monument, famous building","a famous landmark","The tower is the city's most famous <b>landmark</b>.","city",1,"「画期的な出来事」の意味もある（a landmark decision）。"],
+["congestion","kənˈdʒestʃən","名","（交通の）混雑","traffic jams","traffic congestion","A congestion charge has reduced traffic <b>congestion</b> in London.","city",1,"traffic congestion で「交通渋滞」。traffic jam のフォーマル版。","crowd"],
+["commute","kəˈmjuːt","動/名","通勤する／通勤","travel to work","a daily commute","Many people <b>commute</b> over an hour each way.","city",1,"commuter（通勤者）。working from home の話題とセットで出る。"],
+["affordable","əˈfɔːdəbl","形","手頃な価格の","inexpensive, reasonably priced","affordable housing","There is a severe shortage of <b>affordable</b> housing.","city",1,"afford（〜する余裕がある）+ able。cheap より上品な表現。"],
+["relocate","ˌriːləʊˈkeɪt","動","移転する","move","relocate to","Many companies have <b>relocated</b> to the suburbs.","city",2,"move のフォーマル版。名詞 relocation。"],
+["infrastructure","ˈɪnfrəstrʌktʃə","名","インフラ、基盤設備","facilities, public works","transport infrastructure","Investment in <b>infrastructure</b> creates jobs.","city",2,"道路・鉄道・水道など社会の基盤。不可算名詞。"],
+["urbanisation","ˌɜːbənaɪˈzeɪʃn","名","都市化","urban growth","rapid urbanisation","Rapid <b>urbanisation</b> has led to a shortage of housing.","city",2,"urban（都市の）から。アメリカ式は urbanization。"],
+["urban sprawl","ˌɜːbən ˈsprɔːl","名","（無秩序な）都市の拡大","uncontrolled city expansion","limit urban sprawl","<b>Urban sprawl</b> increases dependence on cars.","city",3,"郊外に無計画に広がっていく様子。都市計画の話題で使う。"],
+
+/* ===== 犯罪・法律 ===== */
+["punishment","ˈpʌnɪʃmənt","名","罰","penalty","capital punishment","Some believe that harsher <b>punishment</b> reduces crime.","crime",1,"capital punishment（死刑）。動詞 punish。","punish"],
+["prison","ˈprɪzn","名","刑務所","jail","be sent to prison","He was sent to <b>prison</b> for five years.","crime",1,"be sent to prison / go to prison（冠詞なし）。prisoner（受刑者）。"],
+["commit","kəˈmɪt","動","（罪を）犯す","carry out, perpetrate","commit a crime","Young people who <b>commit</b> crimes need support, not just punishment.","crime",1,"commit a crime で覚える。「専念する（be committed to）」の意味もある。"],
+["violence","ˈvaɪələns","名","暴力","aggression, brutality","violence on TV","Some argue that <b>violence</b> in video games affects behaviour.","crime",1,"形容詞 violent。メディアと犯罪の関係はTask 2の定番。"],
+["crime rate","ˈkraɪm reɪt","名","犯罪率","level of crime","","The <b>crime rate</b> has fallen over the past decade.","crime",1,"Task 1でも出る。fall / rise と組み合わせて使う。"],
+["offender","əˈfendə","名","犯罪者","criminal, wrongdoer","young offenders","Many young <b>offenders</b> go on to commit further crimes.","crime",2,"criminal の言い換え。re-offend（再犯する）も。"],
+["sentence","ˈsentəns","名","刑罰、判決","prison term, penalty","a long sentence","He received a ten-year prison <b>sentence</b>.","crime",2,"「文」ではなく「刑」の意味。動詞でも be sentenced to 〜（〜の刑を言い渡される）。","punish"],
+["deterrent","dɪˈterənt","名","抑止力","disincentive, discouragement","act as a deterrent","Harsh sentences do not always act as a <b>deterrent</b>.","crime",2,"動詞 deter（思いとどまらせる）。「厳罰は犯罪を減らすか」で必須。"],
+["enforce","ɪnˈfɔːs","動","（法律を）施行する、取り締まる","impose, apply","enforce the law","The police must <b>enforce</b> speed limits more strictly.","crime",2,"名詞 enforcement（law enforcement＝警察など）。"],
+["juvenile","ˈdʒuːvənaɪl","形","少年の、未成年の","youth, young","juvenile crime","<b>Juvenile</b> crime has fallen in recent years.","crime",2,"juvenile crime / delinquency（少年犯罪）。"],
+["rehabilitation","ˌriːəˌbɪlɪˈteɪʃn","名","更生、社会復帰","reform, recovery","the rehabilitation of offenders","Prisons should focus more on <b>rehabilitation</b>.","crime",3,"punishment（罰）と対比させて論じる。医療の「リハビリ」も同じ語。"],
+
+/* ===== メディア・広告 ===== */
+["advertising","ˈædvətaɪzɪŋ","名","広告（活動）","marketing, promotion","advertising aimed at children","<b>Advertising</b> aimed at children should be banned.","media",1,"advertisement は1つ1つの広告（可算）、advertising は活動全体（不可算）。"],
+["influence","ˈɪnfluəns","名/動","影響（を与える）","shape, sway","have an influence on","Celebrities have a strong <b>influence</b> on young people.","media",1,"名詞は influence on 〜。動詞は前置詞なしで influence people。","affect"],
+["reliable","rɪˈlaɪəbl","形","信頼できる","trustworthy, dependable","a reliable source","Online news is not always <b>reliable</b>.","media",1,"rely on（頼る）の形容詞形。名詞 reliability。"],
+["consumer","kənˈsjuːmə","名","消費者","buyer, customer","","Advertising encourages <b>consumers</b> to buy things they do not need.","media",1,"consume（消費する）、consumption（消費）とまとめて。"],
+["celebrity","səˈlebrəti","名","有名人","famous person, star","celebrity culture","Many teenagers want to become <b>celebrities</b>.","media",1,"role model（手本となる人）とセットで論じることが多い。"],
+["persuade","pəˈsweɪd","動","説得する","convince","persuade sb to do","Adverts <b>persuade</b> people to spend more money.","media",1,"persuade 人 to do。発音は /pəˈsweɪd/（パスウェイド）。"],
+["misleading","ˌmɪsˈliːdɪŋ","形","誤解を招く","deceptive, false","misleading information","Some adverts contain <b>misleading</b> information.","media",2,"mislead（誤解させる）の形容詞形。fake news の話題で使う。"],
+["broadcast","ˈbrɔːdkɑːst","動","放送する","air, transmit","be broadcast live","The match was <b>broadcast</b> live around the world.","media",2,"過去形・過去分詞も broadcast（不規則変化）。"],
+["coverage","ˈkʌvərɪdʒ","名","報道","reporting","media coverage","The event received a lot of media <b>coverage</b>.","media",2,"cover（報道する）の名詞形。不可算名詞。"],
+
+/* ===== 観光・国際 ===== */
+["tourism","ˈtʊərɪzəm","名","観光業","travel industry","mass tourism","<b>Tourism</b> brings both benefits and problems to local communities.","global",1,"tourist（観光客）。メリット（収入）とデメリット（環境・文化）の両面を書けるように。"],
+["destination","ˌdestɪˈneɪʃn","名","目的地、観光地","place to visit","a popular tourist destination","Kyoto is a popular tourist <b>destination</b>.","global",1,"a popular tourist destination で丸ごと覚える。"],
+["heritage","ˈherɪtɪdʒ","名","遺産","history, tradition","cultural heritage","Governments should protect their cultural <b>heritage</b>.","global",2,"World Heritage Site（世界遺産）。古い建物の保護を問うTask 2で使う。","tradition"],
+["multinational","ˌmʌltiˈnæʃnəl","形","多国籍の","global, international","multinational companies","<b>Multinational</b> companies dominate the global market.","global",2,"multinational companies / corporations。グローバル化の話題で。"],
+["interaction","ˌɪntərˈækʃn","名","交流","contact, communication","social interaction","Online classes reduce face-to-face <b>interaction</b>.","global",2,"動詞 interact with 〜。social interaction（人との交流）が頻出。"],
+["foreign aid","ˌfɒrən ˈeɪd","名","対外援助","overseas aid","","Some people believe <b>foreign aid</b> does not reach those in need.","global",2,"豊かな国が貧しい国を援助すべきかのTask 2で使う。"],
+
+/* ===== Task 1 グラフ描写 ===== */
+["overall","ˌəʊvərˈɔːl","副","全体として","in general, on the whole","","<b>Overall</b>, the number of visitors increased over the period.","graph",1,"Task 1の概要（overview）の書き出しの定番。overviewがないと Task Achievement が6以上になりにくい。"],
+["rise","raɪz","動/名","上がる／上昇","go up, climb","a sharp rise","Prices <b>rose</b> sharply in 2008.","graph",1,"rise（自動詞：rose, risen）と raise（他動詞：〜を上げる）を混同しない。","up"],
+["decline","dɪˈklaɪn","動/名","減少（する）","fall, decrease","a gradual decline","The birth rate has <b>declined</b> steadily.","graph",1,"Task 1では「減少」。「断る」の意味もある。a decline in 〜。","down"],
+["remain stable","rɪˌmeɪn ˈsteɪbl","動","安定したままである","stay the same, stay constant","","The figure <b>remained stable</b> at around 50%.","graph",1,"変化がないときの定番。remain unchanged / stay constant でも言い換えられる。","flat"],
+["dramatic","drəˈmætɪk","形","劇的な、急激な","sharp, rapid","a dramatic increase","There was a <b>dramatic</b> increase in car ownership.","graph",1,"変化の大きさを表す形容詞。副詞 dramatically。","sharp"],
+["gradual","ˈɡrædʒuəl","形","ゆるやかな","slow, steady","a gradual decline","There was a <b>gradual</b> decline in sales.","graph",1,"副詞 gradually。dramatic（急激な）と対比して使い分ける。","slow"],
+["approximately","əˈprɒksɪmətli","副","約、およそ","about, roughly","approximately 20%","<b>Approximately</b> 40% of students were female.","graph",1,"about の繰り返しを避ける。around / roughly とローテーションさせる。"],
+["compared with","kəmˈpeəd wɪð","前","〜と比べて","in comparison with, relative to","","Sales were higher in 2020 <b>compared with</b> 2010.","graph",1,"compared to も可。比較はTask 1で必須の技術。"],
+["whereas","weərˈæz","接","一方で","while, but","","Sales rose in Asia, <b>whereas</b> they fell in Europe.","graph",1,"2つのデータの対比に使う。but の言い換えとして文中で使える。","contrast"],
+["double","ˈdʌbl","動","2倍になる","increase twofold","","The number of users <b>doubled</b> between 2010 and 2020.","graph",1,"3倍は triple、半分になるは halve（ハーヴ）。"],
+["proportion","prəˈpɔːʃn","名","割合","percentage, share","a significant proportion of","A large <b>proportion</b> of students lived at home.","graph",1,"円グラフで必須。percentage / share / figure とローテーションさせる。"],
+["peak","piːk","動/名","ピーク（に達する）","reach a high, top out","peak at","Electricity use <b>peaked</b> at 6 pm.","graph",1,"peak at + 数値。reach a peak of 〜 でも言える。"],
+["steadily","ˈstedɪli","副","着実に","consistently, continuously","rise steadily","The population grew <b>steadily</b> throughout the period.","graph",1,"一定のペースで変化するときに。gradually と使い分ける。","slow"],
+["fluctuate","ˈflʌktʃueɪt","動","変動する","vary, go up and down","fluctuate between X and Y","The price of oil <b>fluctuated</b> between $60 and $80.","graph",2,"上下を繰り返すグラフに使う。名詞 fluctuation。"],
+["account for","əˈkaʊnt fɔː","動","（割合を）占める","make up, represent","","Coal <b>accounted for</b> 40% of electricity production.","graph",2,"円グラフの定番。「説明する」の意味もあるので文脈で判断する。"],
+["plummet","ˈplʌmɪt","動","急落する","plunge, drop sharply","plummet to","Sales <b>plummeted</b> from 4 million to just 1.2 million.","graph",2,"fall sharply の強い言い換え。「〜まで」は to、「〜だけ」は by。","down"],
+["surge","sɜːdʒ","名/動","急増（する）","soar, rocket","a surge in demand","There was a <b>surge</b> in visitor numbers in 2015.","graph",2,"a surge in 〜。急激な上昇を表す。","up"],
+["plateau","ˈplætəʊ","動/名","横ばいになる","level off, stabilise","reach a plateau","The figure rose until 2010 and then <b>plateaued</b>.","graph",2,"上昇・下降のあとに平らになる状態。level off とほぼ同じ。","flat"],
+["respectively","rɪˈspektɪvli","副","それぞれ","in that order","X and Y, respectively","Men and women spent 12% and 18% <b>respectively</b>.","graph",2,"2つ以上の数値を1文にまとめられ、Task 1の語数を節約できる。"],
+["marginal","ˈmɑːdʒɪnl","形","わずかな","slight, minimal","a marginal increase","There was only a <b>marginal</b> increase in spending.","graph",3,"slight の言い換え。副詞 marginally。"],
+
+/* ===== Task 2 論述 ===== */
+["argue","ˈɑːɡjuː","動","主張する、論じる","claim, state","argue that","Some people <b>argue</b> that homework is unnecessary.","arg",1,"Task 2では「言い争う」ではなく「主張する」。Some people argue that 〜 は序論の定番。","argue"],
+["disadvantage","ˌdɪsədˈvɑːntɪdʒ","名","不利な点","downside, weakness","the main disadvantage","The main <b>disadvantage</b> of living in a city is the cost.","arg",1,"advantages and disadvantages 型のTask 2で必須。drawback と交互に使う。","minus"],
+["drawback","ˈdrɔːbæk","名","欠点","disadvantage, shortcoming","a major drawback","The main <b>drawback</b> of online learning is isolation.","arg",1,"disadvantage の言い換え。同じ語を繰り返さないことが語彙の評価につながる。","minus"],
+["furthermore","ˌfɜːðəˈmɔː","副","さらに","moreover, in addition","","<b>Furthermore</b>, public transport reduces pollution.","arg",1,"also の繰り返しを避ける。Moreover / In addition とローテーションさせると単調にならない。"],
+["solution","səˈluːʃn","名","解決策","answer, remedy","a solution to","There is no simple <b>solution</b> to this problem.","arg",1,"前置詞は to（a solution to the problem）。of にしない。"],
+["encourage","ɪnˈkʌrɪdʒ","動","促す、奨励する","promote, support","encourage sb to do","Governments should <b>encourage</b> people to cycle.","arg",1,"encourage 人 to do。解決策を提案するときの定番。反対語 discourage。","encourage"],
+["beneficial","ˌbenɪˈfɪʃl","形","有益な","advantageous, helpful","beneficial to / for","Learning a second language is <b>beneficial</b> for children.","arg",1,"good の言い換え。benefit の形容詞形。","benefit"],
+["on the other hand","ˌɒn ði ˈʌðə hænd","副","他方では","conversely, by contrast","","<b>On the other hand</b>, living in the countryside can be lonely.","arg",1,"本来は On the one hand 〜 とペア。単に but の意味で使いすぎないこと。","contrast"],
+["consequently","ˈkɒnsɪkwəntli","副","その結果","as a result, therefore","","Fewer people cook at home. <b>Consequently</b>, diets have worsened.","arg",1,"so の言い換え。文頭に置いてカンマを付ける。"],
+["nevertheless","ˌnevəðəˈles","副","それにもかかわらず","nonetheless, even so","","The plan is expensive. <b>Nevertheless</b>, it is worth pursuing.","arg",1,"however より「それでもなお」の意味が強い。文頭に置いてカンマを付ける。"],
+["tackle","ˈtækl","動","（問題に）取り組む","deal with, combat","tackle the issue","Governments must act together to <b>tackle</b> climate change.","arg",1,"solve より現実的（完全には解決しなくても取り組む）。","tackle"],
+["extent","ɪkˈstent","名","程度","degree","to what extent","To what <b>extent</b> do you agree or disagree?","arg",2,"To what extent do you agree? はTask 2の頻出形式。to some extent（ある程度は）で部分的に賛成できる。"],
+["address","əˈdres","動","（問題に）取り組む","handle, confront","address the problem","Schools must <b>address</b> the problem of bullying.","arg",2,"「住所」ではなく動詞の意味。tackle とほぼ同じ。","tackle"],
+["perspective","pəˈspektɪv","名","観点","point of view, viewpoint","from a ... perspective","From an economic <b>perspective</b>, tourism is very important.","arg",2,"from a 〜 perspective で論点を整理できる。"],
+["critic","ˈkrɪtɪk","名","批判する人","opponent","critics argue that","<b>Critics</b> argue that the policy is too expensive.","arg",2,"反対意見を紹介するときに。形容詞 critical、名詞 criticism。"],
+["justify","ˈdʒʌstɪfaɪ","動","正当化する","defend, give reasons for","be justified","The high cost of space research cannot be <b>justified</b>.","arg",2,"名詞 justification。賛否を論じるTask 2で使える。"],
+["priority","praɪˈɒrəti","名","優先事項","main concern","a top priority","Education should be a top <b>priority</b> for the government.","arg",2,"prioritise（優先する）も合わせて。"],
+["advocate","ˈædvəkeɪt","動","主張する、支持する","support, champion","strongly advocate","Many experts <b>advocate</b> a four-day working week.","arg",2,"動詞は語尾 /eɪt/、名詞（支持者）は /ət/。advocate の後ろに for は不要。","argue"],
+["outweigh","ˌaʊtˈweɪ","動","〜より勝る","exceed, surpass","the benefits outweigh the drawbacks","In my view, the benefits far <b>outweigh</b> the drawbacks.","arg",2,"「利点が欠点を上回るか」型のTask 2で結論に使う必須語。"],
+["inevitable","ɪnˈevɪtəbl","形","避けられない","unavoidable","almost inevitable","Some job losses are <b>inevitable</b> as technology advances.","arg",2,"副詞 inevitably（必然的に）も便利。"],
+["controversial","ˌkɒntrəˈvɜːʃl","形","議論の分かれる","contentious, debatable","a highly controversial issue","Animal testing remains a highly <b>controversial</b> issue.","arg",2,"序論で「この問題は賛否両論ある」と言うのに便利。"],
+["alleviate","əˈliːvieɪt","動","和らげる","ease, relieve","alleviate poverty","Foreign aid can help <b>alleviate</b> poverty.","arg",2,"苦しみ・問題を軽くする。mitigate とほぼ同じ意味。","ease"],
+["contend","kənˈtend","動","（強く）主張する","maintain, assert","contend that","Some <b>contend</b> that exams are an unfair measure of ability.","arg",3,"argue のフォーマル版。contend that 〜 の形で使う。","argue"],
+["exacerbate","ɪɡˈzæsəbeɪt","動","（問題を）悪化させる","aggravate, intensify","exacerbate the problem","Building more roads may <b>exacerbate</b> the problem.","arg",3,"make 〜 worse の言い換え。Band 7以上を狙う語彙。","worse"],
+["undermine","ˌʌndəˈmaɪn","動","損なう、弱める","weaken, erode","undermine confidence","Fake news <b>undermines</b> public trust in the media.","arg",3,"信頼や努力を少しずつ弱める、というイメージ。","worse"]
+];
+
+const TOPICS={core:"アカデミック基礎語",env:"環境",edu:"教育",tech:"テクノロジー",health:"健康",work:"経済・仕事",soc:"社会・政府",city:"都市・交通",crime:"犯罪・法律",media:"メディア・広告",global:"観光・国際",graph:"Task 1 グラフ描写",arg:"Task 2 論述",mine:"自分で追加"};
+const STEPS={1:{name:"Step 1 基礎",band:"〜Band 5.5"},2:{name:"Step 2 目標",band:"Band 6〜6.5"},3:{name:"Step 3 発展",band:"Band 7〜"}};
+const SEED=RAW.map(([w,ipa,pos,m,syn,col,ex,t,step,note,g])=>({w,ipa,pos,m,syn,col,ex,t,step,note,g:g||""}));
+const SETTLED=3, UNLOCK=0.7;   // 習熟度3以上＝定着、ステップの7割が定着で次へ
+
+/* ---------- storage: progress map + own words + deleted built-ins ---------- */
+const KEY="ielts-drill-v1";
+let store={lv:{},mine:[],del:[]};
+try{
+  const s=JSON.parse(localStorage.getItem(KEY));
+  if(Array.isArray(s)){s.forEach(w=>{store.lv[w.w]=w.lv||0});store.mine=s.filter(w=>w.t==="mine")}
+  else if(s&&typeof s==="object")store={lv:s.lv||{},mine:s.mine||[],del:s.del||[]};
+}catch(e){}
+let words=[];
+function build(){
+  words=SEED.filter(w=>!store.del.includes(w.w)).map(w=>({...w,lv:store.lv[w.w]||0}))
+    .concat(store.mine.map(w=>({...w,step:0,lv:store.lv[w.w]||0})));
+}
+function save(){
+  words.forEach(w=>{store.lv[w.w]=w.lv});
+  try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}
+}
+build();
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const syns=w=>(w.syn||"").split(",").map(s=>s.trim()).filter(Boolean);
+
+function stepStats(s){const ws=words.filter(w=>w.step===s);return{n:ws.length,settled:ws.filter(w=>w.lv>=SETTLED).length,mastered:ws.filter(w=>w.lv>=5).length}}
+function autoStep(){for(const s of [1,2,3]){const st=stepStats(s);if(st.n&&st.settled/st.n<UNLOCK)return s}return 3}
+
+function fillTopics(){
+  const used=new Set(words.map(w=>w.t));const cur=$("f-topic").value;
+  $("f-topic").innerHTML=`<option value="all">すべて</option>`+Object.keys(TOPICS).filter(k=>used.has(k)).map(k=>`<option value="${k}">${TOPICS[k]}</option>`).join("");
+  if([...$("f-topic").options].some(o=>o.value===cur))$("f-topic").value=cur;
+}
+function pool(){
+  const sv=$("f-step").value,t=$("f-topic").value,f=$("f-set").value;
+  let inStep;
+  if(sv==="auto"){const a=autoStep();inStep=w=>w.step===a||w.step===0||(w.step<a&&w.lv<SETTLED)}
+  else if(sv==="all")inStep=()=>true;
+  else{const n=+sv;inStep=w=>w.step===n}
+  return words.filter(w=>inStep(w)&&(t==="all"||w.t===t)&&(f==="all"||(f==="weak"?w.lv<=2:w.lv<5)));
+}
+// lower level → picked more often
+function pick(p,avoid){
+  const c=p.length>1?p.filter(w=>w!==avoid):p;
+  const tot=c.reduce((s,w)=>s+(6-w.lv),0);let r=Math.random()*tot;
+  for(const w of c){r-=6-w.lv;if(r<=0)return w}return c[0];
+}
+function speak(t,slow){
+  try{const lang=$("f-accent").value;const u=new SpeechSynthesisUtterance(t);u.lang=lang;u.rate=slow?.6:.9;
+    const v=speechSynthesis.getVoices().find(v=>v.lang.replace("_","-")===lang);if(v)u.voice=v;
+    speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
+}
+function grade(w,ok){w.lv=ok?Math.min(5,w.lv+1):Math.max(0,w.lv-2);save();stats()}
+function emptyMsg(){return `<div class="empty">この条件に合う単語はありません。<br>レベル・トピック・出題の条件を広げてください。</div>`}
+function tags(w){return `<span class="tags">${w.step?`<span class="chip st">Step ${w.step}</span>`:""}<span class="chip">${esc(TOPICS[w.t]||"")}</span></span>`}
+function detail(w,withMean){
+  const s=syns(w);
+  return `${withMean?`<div class="mean">${esc(w.m)}</div>`:""}
+  ${(s.length||w.col)?`<dl class="kv">${s.length?`<dt>言い換え</dt><dd class="en">${s.map(esc).join(" / ")}</dd>`:""}${w.col?`<dt>よく使う形</dt><dd class="en">${esc(w.col)}</dd>`:""}</dl>`:""}
+  ${w.note?`<div class="note"><b>解説</b>${esc(w.note)}</div>`:""}
+  ${w.ex?`<div class="ex">${w.ex}</div>`:""}`;
+}
+
+function stats(){
+  const n=words.length,m=words.filter(w=>w.lv>=5).length,l=words.filter(w=>w.lv>=1&&w.lv<5).length,z=n-m-l;
+  $("stat").textContent=`習得 ${m} / ${n} 語`;
+  const pc=x=>n?x/n*100:0;
+  $("bar").innerHTML=`<span style="width:${pc(m)}%;background:var(--good)"></span><span style="width:${pc(l)}%;background:var(--accent)"></span>`;
+  $("legend").innerHTML=`<span><i style="background:var(--good)"></i>習得済み（習熟度5）${m}</span><span><i style="background:var(--accent)"></i>学習中 ${l}</span><span><i style="background:var(--line)"></i>未学習 ${z}</span>`;
+  const now=autoStep();
+  $("steps").innerHTML=[1,2,3].map(s=>{const st=stepStats(s);const p=st.n?st.settled/st.n*100:0;
+    return `<button class="step ${s===now?"now":""}" data-step="${s}" aria-label="${STEPS[s].name}を練習する">
+      <span class="t">${STEPS[s].name}${s===now?`<span class="here">いまここ</span>`:""}</span>
+      <span class="b">${STEPS[s].band}</span>
+      <span class="mini"><span style="width:${p}%;background:var(--good)"></span></span>
+      <span class="n">定着 ${st.settled} / ${st.n}</span>
+    </button>`}).join("");
+}
+$("steps").addEventListener("click",e=>{const b=e.target.closest("[data-step]");if(!b)return;$("f-step").value=b.dataset.step;if(mode==="list")show("card");else show(mode)});
+
+/* ---------- card ---------- */
+let mode="card",cur=null,flipped=false;
+function nextCard(){const p=pool();cur=p.length?pick(p,cur):null;flipped=false;renderCard()}
+function renderCard(){
+  const v=$("v-card");
+  if(!cur){v.innerHTML=emptyMsg();return}
+  v.innerHTML=`<div class="card ${flipped?"open":""}" id="card" tabindex="0" role="button" aria-label="カードをめくる">
+    <div class="meta">${tags(cur)}<span>習熟度 ${cur.lv}/5</span></div>
+    <div class="word">${esc(cur.w)}</div>
+    <div class="ipa">${cur.ipa?`/${esc(cur.ipa)}/`:""} <span>${esc(cur.pos||"")}</span> <button class="say" data-say>♪ 発音</button></div>
+    ${flipped?`<div class="back">${detail(cur,true)}</div>`:""}
+    <div class="hint">${flipped?"覚えていましたか？（← まだ ／ → 覚えた）":"タップして意味と解説を見る（スペースキー）"}</div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn no" id="b-no" ${flipped?"":"disabled"}>まだ ✕</button>
+    <button class="btn yes" id="b-yes" ${flipped?"":"disabled"}>覚えた ○</button>
+  </div>`;
+  $("card").onclick=e=>{if(e.target.closest("[data-say]")){speak(cur.w);return}if(!flipped){flipped=true;renderCard()}};
+  $("b-no").onclick=()=>{grade(cur,false);nextCard()};
+  $("b-yes").onclick=()=>{grade(cur,true);nextCard()};
+}
+
+/* ---------- quiz: meaning or paraphrase ---------- */
+let qs={n:0,ok:0,cur:null,done:false,type:"mean"};
+function distractors(w,key){
+  const mine=new Set(syns(w).map(s=>s.toLowerCase()));
+  const ok=x=>x!==w&&!(w.g&&x.g===w.g)&&x.m!==w.m&&key(x)&&!syns(x).some(s=>mine.has(s.toLowerCase()))&&!mine.has(x.w.toLowerCase())&&!syns(x).map(s=>s.toLowerCase()).includes(w.w.toLowerCase());
+  const tiers=[x=>x.pos===w.pos&&x.step===w.step,x=>x.pos===w.pos,()=>true];
+  const out=[],seen=new Set([key(w)]);
+  for(const tier of tiers){for(const x of shuffle(words.filter(x=>ok(x)&&tier(x)))){const k=key(x);if(!seen.has(k)){seen.add(k);out.push(x)}if(out.length===3)return out}}
+  return out;
+}
+function nextQuiz(){
+  const v=$("v-quiz");const para=qs.type==="para";
+  const sel=`<label class="qtype">問題の種類<select id="q-type"><option value="mean"${para?"":" selected"}>意味を選ぶ（英語 → 日本語）</option><option value="para"${para?" selected":""}>言い換えを選ぶ（英語 → 英語）</option></select></label>`;
+  const p=pool().filter(w=>!para||syns(w).length);
+  const bind=()=>{$("q-type").onchange=e=>{qs.type=e.target.value;nextQuiz()}};
+  if(!p.length){v.innerHTML=sel+emptyMsg();bind();return}
+  const w=pick(p,qs.cur);qs.cur=w;qs.done=false;
+  const ans=para?(x=>syns(x)[0]):(x=>x.m);
+  const others=distractors(w,ans);
+  if(others.length<3){v.innerHTML=sel+`<div class="empty">選択肢を作るには、単語が4語以上必要です。</div>`;bind();return}
+  const opts=shuffle([w,...others]);
+  v.innerHTML=sel+`<div class="q">
+    <div class="meta"><span class="score">第${qs.n+1}問　正解 ${qs.ok}/${qs.n}</span>${tags(w)}</div>
+    <div class="word">${esc(w.w)}</div>
+    <div class="ipa">${w.ipa?`/${esc(w.ipa)}/`:""} <span>${esc(w.pos||"")}</span> <button class="say" data-say>♪ 発音</button></div>
+    <div class="prompt">${para?"ほぼ同じ意味の言い換え（paraphrase）はどれ？":"正しい意味はどれ？"}</div>
+    <div class="choices">${opts.map((o,i)=>`<button class="choice ${para?"en":""}" data-i="${i}"><span class="k">${i+1}</span><span>${esc(ans(o))}</span></button>`).join("")}</div>
+    <div class="feedback" id="fb"></div>
+    <button class="btn primary" id="q-next" style="margin-top:12px" hidden>次の問題 →</button>
+  </div>`;
+  bind();
+  v.querySelector("[data-say]").onclick=()=>speak(w.w);
+  v.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{
+    if(qs.done)return;qs.done=true;
+    const ok=opts[+b.dataset.i]===w;
+    qs.n++;if(ok)qs.ok++;grade(w,ok);
+    v.querySelectorAll(".choice").forEach((c,i)=>{if(opts[i]===w)c.classList.add("right")});
+    if(!ok)b.classList.add("wrong");
+    $("fb").innerHTML=`<div>${ok?`<b style="color:var(--good)">正解！</b>`:`<b style="color:var(--bad)">不正解</b>`}　${esc(w.w)} ＝ ${esc(w.m)}</div>${detail(w,false)}`;
+    $("q-next").hidden=false;$("q-next").focus();
+  });
+}
+$("v-quiz").addEventListener("click",e=>{if(e.target.id==="q-next")nextQuiz()});
+
+/* ---------- spelling (listening) ---------- */
+let sp={cur:null,done:false,n:0,ok:0};
+// IELTS accepts both British and American spellings
+const norm=s=>s.toLowerCase().trim().replace(/\s+/g," ").replace(/[‐-―]/g,"-").replace(/is(?=e|ation|ed|ing)/g,"iz").replace(/yse/g,"yze");
+function nextSpell(){
+  const v=$("v-spell");const p=pool();
+  if(!p.length){v.innerHTML=emptyMsg();return}
+  const w=pick(p,sp.cur);sp.cur=w;sp.done=false;
+  v.innerHTML=`<div class="q">
+    <div class="meta"><span class="score">第${sp.n+1}問　正解 ${sp.ok}/${sp.n}</span>${tags(w)}</div>
+    <div class="prompt">音声を聞いて、つづりを入力してください。IELTSのリスニングでは、スペルミスは不正解になります。</div>
+    <div class="listen">
+      <button class="btn primary" id="s-play">♪ 再生</button>
+      <button class="btn" id="s-slow">ゆっくり再生</button>
+    </div>
+    <div class="ex">ヒント：${esc(w.pos||"")}　${esc(w.m)}</div>
+    <form class="spell" id="s-form" autocomplete="off">
+      <input id="s-in" aria-label="つづり" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="type the word">
+      <button class="btn" id="s-check">答え合わせ</button>
+    </form>
+    <div class="feedback" id="s-fb"></div>
+    <button class="btn primary" id="s-next" style="margin-top:12px" hidden>次の問題 →</button>
+  </div>`;
+  $("s-play").onclick=()=>{speak(w.w);$("s-in").focus()};
+  $("s-slow").onclick=()=>{speak(w.w,true);$("s-in").focus()};
+  $("s-next").onclick=nextSpell;
+  $("s-form").onsubmit=e=>{e.preventDefault();
+    if(sp.done){nextSpell();return}
+    const val=$("s-in").value;if(!val.trim())return;
+    sp.done=true;const ok=norm(val)===norm(w.w);
+    sp.n++;if(ok)sp.ok++;grade(w,ok);
+    $("s-in").classList.add(ok?"right":"wrong");$("s-in").readOnly=true;
+    const t=w.w,g=val.trim();
+    const marked=[...t].map((c,i)=>c.toLowerCase()===(g[i]||"").toLowerCase()?esc(c):`<span class="x">${esc(c)}</span>`).join("");
+    $("s-fb").innerHTML=`<div>${ok?`<b style="color:var(--good)">正解！</b>　`:`<b style="color:var(--bad)">不正解</b>　正しいつづり：`}<span class="diff">${ok?esc(t):marked}</span></div>${detail(w,false)}`;
+    $("s-next").hidden=false;$("s-check").disabled=true;$("s-next").focus();
+  };
+  setTimeout(()=>speak(w.w),250);
+}
+
+/* ---------- word list ---------- */
+let listStep="all",listLimit=60;
+function renderList(){
+  const v=$("v-list");
+  const keys=Object.keys(TOPICS).filter(k=>words.some(w=>w.t===k));
+  const topicRows=keys.map(k=>{const ws=words.filter(w=>w.t===k),m=ws.filter(w=>w.lv>=SETTLED).length;
+    return `<div class="trow"><span>${TOPICS[k]}</span><div class="mini"><span style="width:${m/ws.length*100}%;background:var(--good)"></span></div><span class="n">${m}/${ws.length}</span></div>`}).join("");
+  const shown=words.filter(w=>listStep==="all"||String(w.step)===listStep).sort((a,b)=>(a.step||9)-(b.step||9)||a.lv-b.lv||a.w.localeCompare(b.w));
+  const lvBars=w=>`<div class="lv" title="習熟度 ${w.lv}/5">${[1,2,3,4,5].map(n=>`<i class="${w.lv>=n?"on":""}"></i>`).join("")}</div>`;
+  v.innerHTML=`<h3>トピック別の定着状況（習熟度3以上）</h3><div class="topics">${topicRows}</div>
+  <form class="add" id="add">
+    <h2>単語を追加</h2>
+    <div class="two"><input id="a-w" placeholder="英単語（例：scarcity）" required><input id="a-m" placeholder="意味（例：不足）" required></div>
+    <input id="a-syn" placeholder="言い換え（カンマ区切り、例：shortage, lack）">
+    <input id="a-note" placeholder="メモ・解説（なくてもOK）">
+    <input id="a-ex" placeholder="例文（なくてもOK）">
+    <button class="btn primary">追加する</button>
+  </form>
+  <div class="lfilter"><h3>単語一覧（${shown.length}語）タップで解説</h3>
+    <select id="l-step" aria-label="表示するステップ">
+      <option value="all">すべて</option><option value="1">Step 1</option><option value="2">Step 2</option><option value="3">Step 3</option>${store.mine.length?`<option value="0">自分で追加</option>`:""}
+    </select></div>
+  <div class="list">${shown.slice(0,listLimit).map(w=>`<details class="item">
+    <summary><span class="w">${esc(w.w)} ${tags(w)}</span>${lvBars(w)}<span class="m">${esc(w.m)}</span></summary>
+    <div class="body">${w.ipa?`<div class="ipa">/${esc(w.ipa)}/ <span>${esc(w.pos||"")}</span> <button class="say" data-sayw="${esc(w.w)}">♪ 発音</button></div>`:""}${detail(w,false)}<button class="del" data-del="${esc(w.w)}">この単語を一覧から削除</button></div>
+  </details>`).join("")}</div>
+  ${shown.length>listLimit?`<button class="btn more" id="more" style="margin-top:12px;width:100%">さらに表示（残り${shown.length-listLimit}語）</button>`:""}
+  <div class="row" style="margin-top:16px"><button class="btn" id="reset-lv">習熟度をリセット</button><button class="btn" id="reset-all">初期状態に戻す</button></div>`;
+  $("l-step").value=listStep;
+  $("l-step").onchange=e=>{listStep=e.target.value;listLimit=60;renderList()};
+  $("more")?.addEventListener("click",()=>{listLimit+=80;renderList()});
+  $("add").onsubmit=e=>{e.preventDefault();
+    const w=$("a-w").value.trim(),m=$("a-m").value.trim();
+    if(!w||!m)return;
+    if(words.some(x=>x.w.toLowerCase()===w.toLowerCase())){$("a-w").setCustomValidity("この単語はすでに登録されています");$("a-w").reportValidity();setTimeout(()=>$("a-w").setCustomValidity(""),2000);return}
+    let ex=esc($("a-ex").value.trim());
+    const re=new RegExp("("+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\w*)","i");ex=ex.replace(re,"<b>$1</b>");
+    store.mine.unshift({w,m,syn:$("a-syn").value.trim(),note:$("a-note").value.trim(),ex,col:"",ipa:"",pos:"",t:"mine",g:""});
+    build();save();stats();fillTopics();renderList();$("a-w").focus()};
+  v.querySelectorAll("[data-sayw]").forEach(b=>b.onclick=()=>speak(b.dataset.sayw));
+  v.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const k=b.dataset.del;
+    if(store.mine.some(x=>x.w===k))store.mine=store.mine.filter(x=>x.w!==k);else store.del.push(k);
+    build();save();stats();fillTopics();renderList()});
+  armReset("reset-lv","もう一度押すとリセット",()=>{store.lv={};build()});
+  armReset("reset-all","追加・削除も元に戻ります。もう一度押す",()=>{store={lv:{},mine:[],del:[]};build()});
+}
+function armReset(id,msg,fn){const b=$(id);let armed=false;const orig=b.textContent;
+  b.onclick=()=>{if(!armed){armed=true;b.textContent=msg;b.classList.add("no");setTimeout(()=>{armed=false;b.textContent=orig;b.classList.remove("no")},3500);return}
+    fn();save();stats();fillTopics();renderList()}}
+
+/* ---------- routing ---------- */
+function show(m){mode=m;
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===m));
+  ["card","quiz","spell","list"].forEach(k=>$("v-"+k).hidden=k!==m);
+  $("filters").hidden=m==="list";
+  if(m==="card")nextCard();if(m==="quiz")nextQuiz();if(m==="spell")nextSpell();if(m==="list")renderList();
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.mode));
+["f-step","f-topic","f-set"].forEach(id=>$(id).onchange=()=>show(mode));
+document.addEventListener("keydown",e=>{
+  if(["INPUT","SELECT","SUMMARY"].includes(e.target.tagName))return;
+  if(mode==="card"&&cur){
+    if(e.key===" "&&!flipped){e.preventDefault();flipped=true;renderCard()}
+    else if(flipped&&e.key==="ArrowRight"){grade(cur,true);nextCard()}
+    else if(flipped&&e.key==="ArrowLeft"){grade(cur,false);nextCard()}
+  }
+  if(mode==="quiz"){const i="1234".indexOf(e.key);if(i>=0&&!qs.done)document.querySelectorAll(".choice")[i]?.click()}
+});
+try{speechSynthesis.getVoices()}catch(e){}
+fillTopics();stats();show("card");
+</script>
+<script>
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
