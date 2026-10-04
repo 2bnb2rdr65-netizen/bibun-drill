@@ -1,5 +1,5 @@
 // 更新したら CACHE の番号を上げると、古いキャッシュが入れ替わります
-const CACHE = 'ielts-drill-v1';
+const CACHE = 'ielts-drill-v2';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
