@@ -40,10 +40,11 @@ img{max-width:100%}
   --accent:#7c9dff; --accent-soft:#1f2a47; --good:#5fcf95; --good-soft:#15301f; --bad:#ff8a8a; --bad-soft:#3a1c1c;
   --note:#2a2618; --note-ink:#e6d7a8; color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;padding:24px 16px 48px}
-.wrap{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;padding:12px 16px calc(96px + env(safe-area-inset-bottom, 0px))}
+.wrap{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+.settings{display:flex;flex-direction:column;gap:16px;border-top:1px solid var(--line);padding-top:20px}
 header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
-h1{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.02em;margin:0}
+h1{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.02em;margin:0}
 h1 span{color:var(--accent)}
 .stat{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 
@@ -60,9 +61,10 @@ h1 span{color:var(--accent)}
 .mini{height:6px;border-radius:3px;background:var(--line);overflow:hidden;display:flex}
 .mini span{display:block;height:100%}
 
-nav{display:grid;grid-template-columns:repeat(4,1fr);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:4px;gap:4px}
-nav button{font:inherit;font-weight:700;font-size:13px;border:0;background:none;color:var(--muted);padding:9px 2px;border-radius:7px;cursor:pointer}
-nav button[aria-selected="true"]{background:var(--accent);color:var(--paper)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--paper);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom, 0px))}
+.tabs{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tabs button{font:inherit;font-weight:700;font-size:14px;border:0;background:none;color:var(--muted);padding:11px 2px;border-radius:8px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--paper)}
 button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px}
 .filters label,.qtype{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted);letter-spacing:.04em}
@@ -72,14 +74,14 @@ select{font:inherit;font-size:13px;padding:6px 8px;border-radius:6px;border:1px 
 .chip.st{border-color:var(--accent);color:var(--accent)}
 
 /* the card */
-.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;min-height:320px;padding:22px 24px 20px;position:relative;
+.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;min-height:300px;padding:22px 24px 20px;position:relative;
   background-image:linear-gradient(var(--paper) 62px,transparent 62px),repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);
   display:flex;flex-direction:column;cursor:pointer;user-select:none}
 .card.open{background-image:none}
 .card::before{content:"";position:absolute;left:0;right:0;top:61px;height:2px;background:var(--bad);opacity:.55}
 .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--muted)}
 .meta .tags{display:flex;gap:6px;flex-wrap:wrap}
-.word{font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,54px);letter-spacing:-.025em;line-height:1.05;margin:40px 0 6px;overflow-wrap:anywhere}
+.word{font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,54px);letter-spacing:-.025em;line-height:1.05;margin:36px 0 6px;overflow-wrap:anywhere}
 .ipa{font-family:var(--mono);font-size:15px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .say{border:1px solid var(--line);background:var(--paper);color:var(--accent);border-radius:999px;font:inherit;font-size:12px;padding:2px 10px;cursor:pointer}
 .back{margin-top:16px;display:grid;gap:10px;background:var(--paper);padding-top:4px;cursor:auto;user-select:text}
@@ -103,7 +105,7 @@ select{font:inherit;font-size:13px;padding:6px 8px;border-radius:6px;border:1px 
 /* quiz & spelling */
 .q{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:22px 24px;display:flex;flex-direction:column}
 .q .word{margin:18px 0 4px}
-.qtype{margin-bottom:10px;max-width:260px}
+.qtype{margin-top:12px;max-width:280px}
 .prompt{font-size:13px;color:var(--muted);margin-top:16px}
 .choices{display:grid;gap:8px;margin-top:10px}
 .choice{text-align:left;font:inherit;font-size:16px;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;display:flex;gap:12px}
@@ -159,54 +161,62 @@ h3{font-size:13px;margin:0 0 8px;color:var(--muted);font-weight:700;letter-spaci
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>IELTS <span>単語ドリル</span></h1>
-    <div class="stat" id="stat"></div>
-  </header>
-
-  <section class="plan" aria-label="学習ステップ">
-    <p>英検2級はIELTS Band 5前後が目安です。6.5を取るには、Step 1とStep 2をしっかり定着させましょう。いまのステップの7割が定着すると、「おすすめ」の出題が次のステップに進みます。</p>
-    <div class="steps" id="steps"></div>
-  </section>
-
-  <nav role="tablist">
-    <button role="tab" data-mode="card" aria-selected="true">カード</button>
-    <button role="tab" data-mode="quiz" aria-selected="false">クイズ</button>
-    <button role="tab" data-mode="spell" aria-selected="false">スペル</button>
-    <button role="tab" data-mode="list" aria-selected="false">単語帳</button>
-  </nav>
-
-  <div class="filters" id="filters">
-    <label>レベル<select id="f-step">
-      <option value="auto">おすすめ（自動）</option>
-      <option value="1">Step 1 基礎</option>
-      <option value="2">Step 2 目標</option>
-      <option value="3">Step 3 発展</option>
-      <option value="all">すべて</option>
-    </select></label>
-    <label>トピック<select id="f-topic"></select></label>
-    <label>出題<select id="f-set">
-      <option value="all">すべて</option>
-      <option value="weak">苦手のみ（習熟度2以下）</option>
-      <option value="new">未習得のみ</option>
-    </select></label>
-    <label>発音<select id="f-accent">
-      <option value="en-GB">イギリス英語</option>
-      <option value="en-AU">オーストラリア英語</option>
-      <option value="en-US">アメリカ英語</option>
-    </select></label>
-  </div>
-
   <section id="v-card"></section>
   <section id="v-quiz" hidden></section>
   <section id="v-spell" hidden></section>
   <section id="v-list" hidden></section>
 
-  <div class="prog">
-    <div class="bar" id="bar"></div>
-    <div class="legend" id="legend"></div>
-  </div>
+  <section class="settings" aria-label="出題の設定と進み具合">
+    <header>
+      <h1>IELTS <span>単語ドリル</span></h1>
+      <div class="stat" id="stat"></div>
+    </header>
+
+    <div class="filters" id="filters">
+      <label>レベル<select id="f-step">
+        <option value="auto">おすすめ（自動）</option>
+        <option value="1">Step 1 基礎</option>
+        <option value="2">Step 2 目標</option>
+        <option value="3">Step 3 発展</option>
+        <option value="all">すべて</option>
+      </select></label>
+      <label>トピック<select id="f-topic"></select></label>
+      <label>出題<select id="f-set">
+        <option value="all">すべて</option>
+        <option value="weak">苦手のみ（習熟度2以下）</option>
+        <option value="new">未習得のみ</option>
+      </select></label>
+      <label>発音<select id="f-accent">
+        <option value="en-GB">イギリス英語</option>
+        <option value="en-AU">オーストラリア英語</option>
+        <option value="en-US">アメリカ英語</option>
+      </select></label>
+      <label>効果音<select id="f-sound">
+        <option value="on">オン</option>
+        <option value="off">オフ</option>
+      </select></label>
+    </div>
+
+    <div class="plan">
+      <p>英検2級はIELTS Band 5前後が目安です。6.5を取るには、Step 1とStep 2をしっかり定着させましょう。いまのステップの7割が定着すると、「おすすめ」の出題が次のステップに進みます。</p>
+      <div class="steps" id="steps"></div>
+    </div>
+
+    <div class="prog">
+      <div class="bar" id="bar"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
 </div>
+
+<nav class="tabbar" role="tablist" aria-label="練習モード">
+  <div class="tabs">
+    <button role="tab" data-mode="card" aria-selected="true">カード</button>
+    <button role="tab" data-mode="quiz" aria-selected="false">クイズ</button>
+    <button role="tab" data-mode="spell" aria-selected="false">スペル</button>
+    <button role="tab" data-mode="list" aria-selected="false">単語帳</button>
+  </div>
+</nav>
 
 <script>
 // [word, IPA (British), 品詞, 意味, 言い換え, よく使う形, 例文, topic, step(1-3), 解説, near-synonym group]
@@ -765,7 +775,40 @@ function speak(t,slow){
     const v=speechSynthesis.getVoices().find(v=>v.lang.replace("_","-")===lang);if(v)u.voice=v;
     speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
 }
-function grade(w,ok){w.lv=ok?Math.min(5,w.lv+1):Math.max(0,w.lv-2);save();stats()}
+/* ---------- sound effects: soft sine tones made in the browser, no files ---------- */
+const SOUND_KEY="ielts-drill-sound";
+let soundOn=true,actx=null;
+try{soundOn=localStorage.getItem(SOUND_KEY)!=="off"}catch(e){}
+function ac(){
+  if(!soundOn)return null;
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();return actx}catch(e){return null}
+}
+// one gentle note: quick fade-in, smooth fade-out, low volume, rounded by a low-pass filter
+function tone(freq,at,dur,vol){
+  const c=ac();if(!c)return;
+  const t=c.currentTime+0.01+at,o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter();
+  o.type="sine";o.frequency.value=freq;f.type="lowpass";f.frequency.value=2400;
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(f);f.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+0.05);
+}
+const sfx={
+  tap(){tone(740,0,0.07,0.035)},                                          // short, quiet tick
+  flip(){tone(587.33,0,0.12,0.04);tone(880,0.04,0.14,0.03)},              // light page turn
+  ok(){tone(659.25,0,0.3,0.075);tone(987.77,0.09,0.45,0.065)},            // E5 → B5, an open, bright fifth
+  ng(){tone(392,0,0.25,0.06);tone(329.63,0.11,0.35,0.05)},                // G4 → E4, soft and low, no buzzer
+  mastered(){[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*0.07,0.45,0.05))} // small arpeggio when a word reaches level 5
+};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button,summary");if(!b||b.disabled)return;
+  if(b.matches(".choice,#b-yes,#b-no,#s-check,[data-say],[data-sayw]"))return;   // these play their own sound or speech
+  sfx.tap();
+},true);
+
+function grade(w,ok){
+  const before=w.lv;
+  w.lv=ok?Math.min(5,w.lv+1):Math.max(0,w.lv-2);save();stats();
+  if(ok&&before<5&&w.lv===5)sfx.mastered();else (ok?sfx.ok:sfx.ng)();
+}
 function emptyMsg(){return `<div class="empty">この条件に合う単語はありません。<br>レベル・トピック・出題の条件を広げてください。</div>`}
 function tags(w){return `<span class="tags">${w.step?`<span class="chip st">Step ${w.step}</span>`:""}<span class="chip">${esc(TOPICS[w.t]||"")}</span></span>`}
 function detail(w,withMean){
@@ -793,9 +836,12 @@ function stats(){
 }
 $("steps").addEventListener("click",e=>{const b=e.target.closest("[data-step]");if(!b)return;$("f-step").value=b.dataset.step;if(mode==="list")show("card");else show(mode)});
 
+/* keep the current question at the top of the screen */
+function toTop(){const v=$("v-"+mode);if(v&&v.getBoundingClientRect().top<0)window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}
+
 /* ---------- card ---------- */
 let mode="card",cur=null,flipped=false;
-function nextCard(){const p=pool();cur=p.length?pick(p,cur):null;flipped=false;renderCard()}
+function nextCard(){const p=pool();cur=p.length?pick(p,cur):null;flipped=false;renderCard();toTop()}
 function renderCard(){
   const v=$("v-card");
   if(!cur){v.innerHTML=emptyMsg();return}
@@ -810,7 +856,7 @@ function renderCard(){
     <button class="btn no" id="b-no" ${flipped?"":"disabled"}>まだ ✕</button>
     <button class="btn yes" id="b-yes" ${flipped?"":"disabled"}>覚えた ○</button>
   </div>`;
-  $("card").onclick=e=>{if(e.target.closest("[data-say]")){speak(cur.w);return}if(!flipped){flipped=true;renderCard()}};
+  $("card").onclick=e=>{if(e.target.closest("[data-say]")){speak(cur.w);return}if(!flipped){flipped=true;sfx.flip();renderCard()}};
   $("b-no").onclick=()=>{grade(cur,false);nextCard()};
   $("b-yes").onclick=()=>{grade(cur,true);nextCard()};
 }
@@ -830,13 +876,13 @@ function nextQuiz(){
   const sel=`<label class="qtype">問題の種類<select id="q-type"><option value="mean"${para?"":" selected"}>意味を選ぶ（英語 → 日本語）</option><option value="para"${para?" selected":""}>言い換えを選ぶ（英語 → 英語）</option></select></label>`;
   const p=pool().filter(w=>!para||syns(w).length);
   const bind=()=>{$("q-type").onchange=e=>{qs.type=e.target.value;nextQuiz()}};
-  if(!p.length){v.innerHTML=sel+emptyMsg();bind();return}
-  const w=pick(p,qs.cur);qs.cur=w;qs.done=false;
+  if(!p.length){v.innerHTML=emptyMsg()+sel;bind();return}
+  const w=pick(p,qs.cur);qs.cur=w;qs.done=false;toTop();
   const ans=para?(x=>syns(x)[0]):(x=>x.m);
   const others=distractors(w,ans);
-  if(others.length<3){v.innerHTML=sel+`<div class="empty">選択肢を作るには、単語が4語以上必要です。</div>`;bind();return}
+  if(others.length<3){v.innerHTML=`<div class="empty">選択肢を作るには、単語が4語以上必要です。</div>`+sel;bind();return}
   const opts=shuffle([w,...others]);
-  v.innerHTML=sel+`<div class="q">
+  v.innerHTML=`<div class="q">
     <div class="meta"><span class="score">第${qs.n+1}問　正解 ${qs.ok}/${qs.n}</span>${tags(w)}</div>
     <div class="word">${esc(w.w)}</div>
     <div class="ipa">${w.ipa?`/${esc(w.ipa)}/`:""} <span>${esc(w.pos||"")}</span> <button class="say" data-say>♪ 発音</button></div>
@@ -844,7 +890,7 @@ function nextQuiz(){
     <div class="choices">${opts.map((o,i)=>`<button class="choice ${para?"en":""}" data-i="${i}"><span class="k">${i+1}</span><span>${esc(ans(o))}</span></button>`).join("")}</div>
     <div class="feedback" id="fb"></div>
     <button class="btn primary" id="q-next" style="margin-top:12px" hidden>次の問題 →</button>
-  </div>`;
+  </div>`+sel;
   bind();
   v.querySelector("[data-say]").onclick=()=>speak(w.w);
   v.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{
@@ -866,7 +912,7 @@ const norm=s=>s.toLowerCase().trim().replace(/\s+/g," ").replace(/[‐-―]/g,"-
 function nextSpell(){
   const v=$("v-spell");const p=pool();
   if(!p.length){v.innerHTML=emptyMsg();return}
-  const w=pick(p,sp.cur);sp.cur=w;sp.done=false;
+  const w=pick(p,sp.cur);sp.cur=w;sp.done=false;toTop();
   v.innerHTML=`<div class="q">
     <div class="meta"><span class="score">第${sp.n+1}問　正解 ${sp.ok}/${sp.n}</span>${tags(w)}</div>
     <div class="prompt">音声を聞いて、つづりを入力してください。IELTSのリスニングでは、スペルミスは不正解になります。</div>
@@ -951,17 +997,19 @@ function armReset(id,msg,fn){const b=$(id);let armed=false;const orig=b.textCont
 
 /* ---------- routing ---------- */
 function show(m){mode=m;
-  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===m));
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===m));
   ["card","quiz","spell","list"].forEach(k=>$("v-"+k).hidden=k!==m);
   $("filters").hidden=m==="list";
   if(m==="card")nextCard();if(m==="quiz")nextQuiz();if(m==="spell")nextSpell();if(m==="list")renderList();
 }
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.mode));
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.mode));
 ["f-step","f-topic","f-set"].forEach(id=>$(id).onchange=()=>show(mode));
+$("f-sound").value=soundOn?"on":"off";
+$("f-sound").onchange=e=>{soundOn=e.target.value==="on";try{localStorage.setItem(SOUND_KEY,soundOn?"on":"off")}catch(err){}if(soundOn)sfx.ok()};
 document.addEventListener("keydown",e=>{
   if(["INPUT","SELECT","SUMMARY"].includes(e.target.tagName))return;
   if(mode==="card"&&cur){
-    if(e.key===" "&&!flipped){e.preventDefault();flipped=true;renderCard()}
+    if(e.key===" "&&!flipped){e.preventDefault();flipped=true;sfx.flip();renderCard()}
     else if(flipped&&e.key==="ArrowRight"){grade(cur,true);nextCard()}
     else if(flipped&&e.key==="ArrowLeft"){grade(cur,false);nextCard()}
   }
